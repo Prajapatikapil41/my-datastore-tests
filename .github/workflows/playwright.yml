@@ -50,7 +50,7 @@ jobs:
         run: npx playwright install
 
       - name: Run Playwright tests (Sequential in CI)
-        run: npx playwright test tests/datastore.spec.js --workers=1 --reporter=list --reporter=html --reporter=./reporters/email-reporter.cjs
+        run: npx playwright test tests
 
       - name: Upload playwright-report
         if: ${{ !cancelled() }}
