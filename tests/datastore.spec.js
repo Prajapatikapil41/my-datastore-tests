@@ -1568,7 +1568,7 @@ test.beforeEach(async ({}, testInfo) => {
   LAST_ADDED_PRODUCT = ''
 
   browser = await chromium.launch({
-    headless: CONFIG.HEADLESS,
+    headless: process.env.CI ? true : false,
     slowMo: CONFIG.PW_SLOWMO,
     args: ['--start-maximized']
   })
