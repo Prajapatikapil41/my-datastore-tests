@@ -5,6 +5,9 @@ on:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
+  schedule:
+    - cron: '35 11 * * *'   # Runs daily at 5:05 PM IST
+  workflow_dispatch:
 
 jobs:
   test:
@@ -38,7 +41,6 @@ jobs:
         run: npx playwright install --with-deps
 
       - name: Run Playwright tests
-        # the reporter file should be added to your repo at reporters/email-reporter.js
         run: npx playwright test --reporter=list --reporter=html --reporter=./reporters/email-reporter.js
 
       - name: Upload playwright-report
