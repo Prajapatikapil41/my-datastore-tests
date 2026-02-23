@@ -1659,301 +1659,301 @@ test.afterEach(async ({}, testInfo) => {
    TESTS 
 ================================ */
 
-// test('[P0] 1: Shoping Cart and checkout page', async ({}, testInfo) => {
-//   CURRENT_TESTCASE = '[P0] 1: Submitting Selected AOI'
+test('[P0] 1: Shoping Cart and checkout page', async ({}, testInfo) => {
+  CURRENT_TESTCASE = '[P0] 1: Submitting Selected AOI'
 
-//   await showStep(page, 'Step 1: Opening datastore landing page')
-//   const s1 = await openLanding(page)
-//   if (!s1) return
+  await showStep(page, 'Step 1: Opening datastore landing page')
+  const s1 = await openLanding(page)
+  if (!s1) return
 
-//   await showStep(page, 'Step 2: Closing wizard modal')
-//   const s2 = await S2closeWizardModal(page)
-//   if (!s2) return
+  await showStep(page, 'Step 2: Closing wizard modal')
+  const s2 = await S2closeWizardModal(page)
+  if (!s2) return
 
-//   await showStep(page, 'Step 3: Search for a place and Drawing AOI')
-//   const s3 = await searchPlace(page, 'Indore')
-//   if (!s3) return
+  await showStep(page, 'Step 3: Search for a place and Drawing AOI')
+  const s3 = await searchPlace(page, 'Indore')
+  if (!s3) return
 
-//   await showStep(page, 'Step 4: Open Satellite Imagery section')
-//   const s5 = await highlightSidebarAndOpenSatellite(page)
-//   if (!s5) return
+  await showStep(page, 'Step 4: Open Satellite Imagery section')
+  const s5 = await highlightSidebarAndOpenSatellite(page)
+  if (!s5) return
 
-//   await showStep(page, 'Step 5: Waiting for table to load')
-//   const s6 = await waitForSatelliteTableWithWarning(page)
-//   if (!s6) return
+  await showStep(page, 'Step 5: Waiting for table to load')
+  const s6 = await waitForSatelliteTableWithWarning(page)
+  if (!s6) return
 
-//   await showStep(page, 'Step 6: Click Add to cart for FIRST row in satellite table')
-//   const s7 = await addItemToCartAndVerifyPopup(page)
-//   if (!s7) return
+  await showStep(page, 'Step 6: Click Add to cart for FIRST row in satellite table')
+  const s7 = await addItemToCartAndVerifyPopup(page)
+  if (!s7) return
 
-//   await showStep(page, 'Step 7: Waiting for "Item added to cart" popup / Verify cart (first-row match)')
-//   const s8 = await openCartAndVerifyItem(page)
-//   if (!s8) return
+  await showStep(page, 'Step 7: Waiting for "Item added to cart" popup / Verify cart (first-row match)')
+  const s8 = await openCartAndVerifyItem(page)
+  if (!s8) return
 
-//   await showStep(page, 'Step 8: Click Checkout / Fill form / Submit order')
-//   const s9 = await checkoutAndFillForm(page)
-//   if (!s9) return
+  await showStep(page, 'Step 8: Click Checkout / Fill form / Submit order')
+  const s9 = await checkoutAndFillForm(page)
+  if (!s9) return
 
-//   await showStep(page, 'Step 9: ✅ Redirected to thank_you page — TEST PASSED')
+  await showStep(page, 'Step 9: ✅ Redirected to thank_you page — TEST PASSED')
 
-//   if (WARNINGS.length > 0) {
-//     try {
-//       testInfo.attachments = testInfo.attachments || []
-//       testInfo.annotations = testInfo.annotations || []
-//       testInfo.annotations.push({
-//         type: 'warning',
-//         description: WARNINGS.map(w => `${w.time} — ${w.message}`).join('\n')
-//       })
-//     } catch (err) {
-//       console.warn('Failed to attach warnings to testInfo:', err)
-//     }
-//   }
-// })
+  if (WARNINGS.length > 0) {
+    try {
+      testInfo.attachments = testInfo.attachments || []
+      testInfo.annotations = testInfo.annotations || []
+      testInfo.annotations.push({
+        type: 'warning',
+        description: WARNINGS.map(w => `${w.time} — ${w.message}`).join('\n')
+      })
+    } catch (err) {
+      console.warn('Failed to attach warnings to testInfo:', err)
+    }
+  }
+})
 
-// test('[P0] 2: Satellite scenes — outline, preview and details verification', async ({}, testInfo) => {
-//   CURRENT_TESTCASE = '[P0] 2: Satellite scenes — outline, preview and details verification'
+test('[P0] 2: Satellite scenes — outline, preview and details verification', async ({}, testInfo) => {
+  CURRENT_TESTCASE = '[P0] 2: Satellite scenes — outline, preview and details verification'
 
-//   const MAX_PRODUCTS = Number(process.env.MAX_PRODUCTS || 1)
-//   const SCENES_TABLE_TIMEOUT = Number(process.env.SCENES_TABLE_TIMEOUT || 120000)
+  const MAX_PRODUCTS = Number(process.env.MAX_PRODUCTS || 1)
+  const SCENES_TABLE_TIMEOUT = Number(process.env.SCENES_TABLE_TIMEOUT || 120000)
 
-//   await showStep(page, 'Step 1: Opening datastore landing page')
-//   await openLanding(page)
+  await showStep(page, 'Step 1: Opening datastore landing page')
+  await openLanding(page)
 
-//   await showStep(page, 'Step 2: Closing wizard modal')
-//   try {
-//     await S2closeWizardModal(page)
-//     await fastWait(page, 800)
-//   } catch {
-//     addWarning('Unable to close wizard modal')
-//   }
+  await showStep(page, 'Step 2: Closing wizard modal')
+  try {
+    await S2closeWizardModal(page)
+    await fastWait(page, 800)
+  } catch {
+    addWarning('Unable to close wizard modal')
+  }
 
-//   await showStep(page, 'Step 3: Search for a place and Drawing AOI')
-//   setContext({ flow: 'searchAndDraw', details: { place: 'Indore' } })
-//   if (!await searchPlace(page, 'Indore')) {
-//     addWarning('searchPlace failed — stopping test')
-//     return
-//   }
+  await showStep(page, 'Step 3: Search for a place and Drawing AOI')
+  setContext({ flow: 'searchAndDraw', details: { place: 'Indore' } })
+  if (!await searchPlace(page, 'Indore')) {
+    addWarning('searchPlace failed — stopping test')
+    return
+  }
 
-//   await showStep(page, 'Step 4: Open Satellite Imagery section')
-//   if (!await highlightSidebarAndOpenSatellite(page)) return
+  await showStep(page, 'Step 4: Open Satellite Imagery section')
+  if (!await highlightSidebarAndOpenSatellite(page)) return
 
-//   await showStep(page, 'Step 5: Waiting for table to load')
-//   if (!await waitForSatelliteTableWithWarning(page)) return
+  await showStep(page, 'Step 5: Waiting for table to load')
+  if (!await waitForSatelliteTableWithWarning(page)) return
 
-//   await showStep(page, 'Step 6: Processing Products')
+  await showStep(page, 'Step 6: Processing Products')
 
-//   const productCells = Locators.productCellsInSatelliteTable(page)
-//   const totalProducts = await productCells.count()
-//   const productCount = Math.min(totalProducts, MAX_PRODUCTS)
+  const productCells = Locators.productCellsInSatelliteTable(page)
+  const totalProducts = await productCells.count()
+  const productCount = Math.min(totalProducts, MAX_PRODUCTS)
 
-//   if (productCount === 0) {
-//     addWarning('No products found in #table_satellite')
-//     return
-//   }
+  if (productCount === 0) {
+    addWarning('No products found in #table_satellite')
+    return
+  }
 
-//   await showStep(page, `Processing ${productCount} product(s)`)
+  await showStep(page, `Processing ${productCount} product(s)`)
 
-//   for (let pIndex = 0; pIndex < productCount; pIndex++) {
-//     const productCell = productCells.nth(pIndex)
-//     const productName = await getInnerTextSafe(productCell) || `product-${pIndex + 1}`
+  for (let pIndex = 0; pIndex < productCount; pIndex++) {
+    const productCell = productCells.nth(pIndex)
+    const productName = await getInnerTextSafe(productCell) || `product-${pIndex + 1}`
 
-//     setContext({ flow: 'productSelection', product: productName })
+    setContext({ flow: 'productSelection', product: productName })
 
-//     await showStep(page, `Product ${pIndex + 1}/${productCount}: ${productName}`)
-//     await highlight(page, productCell)
+    await showStep(page, `Product ${pIndex + 1}/${productCount}: ${productName}`)
+    await highlight(page, productCell)
 
-//     try {
-//       await productCell.click()
-//     } catch (e) {
-//       addWarning(`Unable to click product "${productName}"`)
-//       continue
-//     }
+    try {
+      await productCell.click()
+    } catch (e) {
+      addWarning(`Unable to click product "${productName}"`)
+      continue
+    }
 
-//     const scenesOk = await waitForScenesTableStable(page, SCENES_TABLE_TIMEOUT)
-//     if (!scenesOk) {
-//       addWarning(`Scenes table not loaded for "${productName}"`)
-//       continue
-//     }
+    const scenesOk = await waitForScenesTableStable(page, SCENES_TABLE_TIMEOUT)
+    if (!scenesOk) {
+      addWarning(`Scenes table not loaded for "${productName}"`)
+      continue
+    }
 
-//     const scenesRows = Locators.scenesRows(page)
-//     const scenesCountAll = await scenesRows.count()
-//     const scenesCount = Math.min(1, scenesCountAll)
+    const scenesRows = Locators.scenesRows(page)
+    const scenesCountAll = await scenesRows.count()
+    const scenesCount = Math.min(1, scenesCountAll)
 
-//     for (let sIdx = 0; sIdx < scenesCount; sIdx++) {
-//       const row = scenesRows.nth(sIdx)
-//       const sceneId = await getSceneIdFromRow(row)
-//       setContext({ flow: 'sceneProcessing', product: productName, scene: sceneId })
-//       await processScene(row, page, sIdx)
-//     }
-//     setContext({ product: '' })
-//   }
-//   await showStep(page, 'Step 8: Testcase 2 completed')
-// })
+    for (let sIdx = 0; sIdx < scenesCount; sIdx++) {
+      const row = scenesRows.nth(sIdx)
+      const sceneId = await getSceneIdFromRow(row)
+      setContext({ flow: 'sceneProcessing', product: productName, scene: sceneId })
+      await processScene(row, page, sIdx)
+    }
+    setContext({ product: '' })
+  }
+  await showStep(page, 'Step 8: Testcase 2 completed')
+})
 
-// test('[P1] 3: Search UI — search location (draw AOI)', async ({}, testInfo) => {
-//   CURRENT_TESTCASE = '[P1] 3: Search UI — search location (draw AOI)'
+test('[P1] 3: Search UI — search location (draw AOI)', async ({}, testInfo) => {
+  CURRENT_TESTCASE = '[P1] 3: Search UI — search location (draw AOI)'
 
-//   await showStep(page, 'Step 1: Opening datastore landing page')
-//   const s1 = await openLanding(page)
-//   if (!s1) return
+  await showStep(page, 'Step 1: Opening datastore landing page')
+  const s1 = await openLanding(page)
+  if (!s1) return
 
-//   await showStep(page, 'Step 2: Closing wizard modal')
-//   try {
-//     await S2closeWizardModal(page)
-//     await fastWait(page, 800)
-//   } catch {
-//     addWarning('Unable to close wizard modal')
-//   }
+  await showStep(page, 'Step 2: Closing wizard modal')
+  try {
+    await S2closeWizardModal(page)
+    await fastWait(page, 800)
+  } catch {
+    addWarning('Unable to close wizard modal')
+  }
 
-//   await showStep(page, 'Step 3: Navigate to search module (click world_search)')
-//   const opened = await openSearchModal(page)
-//   if (!opened) {
-//     addWarning('Failed to open search module (world_search click)')
-//     return
-//   }
+  await showStep(page, 'Step 3: Navigate to search module (click world_search)')
+  const opened = await openSearchModal(page)
+  if (!opened) {
+    addWarning('Failed to open search module (world_search click)')
+    return
+  }
 
-//   await showStep(page, 'Step 4: Verify search input/modal opens')
-//   const pac = await waitForSearchInputAndHighlight(page)
-//   if (!pac) {
-//     addWarning('Search input (#pac-input) did not appear after opening search module')
-//     return
-//   }
+  await showStep(page, 'Step 4: Verify search input/modal opens')
+  const pac = await waitForSearchInputAndHighlight(page)
+  if (!pac) {
+    addWarning('Search input (#pac-input) did not appear after opening search module')
+    return
+  }
 
-//   await showStep(page, 'Step 5: Verify placeholder text is "Search for Imagery, LiDAR & DEM Data"')
-//   const placeholderOk = await verifySearchPlaceholder(page, 'Search for Imagery, LiDAR & DEM Data')
-//   if (!placeholderOk) {
-//     addWarning('Search input placeholder mismatch')
-//   }
+  await showStep(page, 'Step 5: Verify placeholder text is "Search for Imagery, LiDAR & DEM Data"')
+  const placeholderOk = await verifySearchPlaceholder(page, 'Search for Imagery, LiDAR & DEM Data')
+  if (!placeholderOk) {
+    addWarning('Search input placeholder mismatch')
+  }
 
-//   await showStep(page, 'Step 6: Type "Indore" and select first suggestion')
-//   try {
-//     await pac.fill('Indore')
-//     const first = Locators.pacFirstOption(page)
-//     await expect(first).toBeVisible({ timeout: 12000 })
-//     await highlight(page, first)
-//     await first.click()
-//   } catch (e) {
-//     addWarning('Failed to type/select "Indore" from suggestions')
-//     return
-//   }
+  await showStep(page, 'Step 6: Type "Indore" and select first suggestion')
+  try {
+    await pac.fill('Indore')
+    const first = Locators.pacFirstOption(page)
+    await expect(first).toBeVisible({ timeout: 12000 })
+    await highlight(page, first)
+    await first.click()
+  } catch (e) {
+    addWarning('Failed to type/select "Indore" from suggestions')
+    return
+  }
 
-//   await showStep(page, 'Step 7: Wait and verify marker/transparent image appears on map')
-//   let markerOk = false
-//   try {
-//     setContext({ flow: 'mapValidation', details: { type: 'searchMarker' } })
-//     await waitForMapToLoad(page)
-//     const marker = page
-//       .locator('#map img[src*="transparent.png"], #map img[src*="maps.gstatic.com"], #map img[src*="mapfiles/transparent.png"]')
-//       .first()
-//     await marker.waitFor({ state: 'visible', timeout: 15000 })
-//     // Dark strong highlight
-//     await highlight(page, marker, {
-//       borderColor: 'darkred',
-//       backgroundColor: 'rgba(0,0,0,0.35)',
-//       borderWidth: 4
-//     })
+  await showStep(page, 'Step 7: Wait and verify marker/transparent image appears on map')
+  let markerOk = false
+  try {
+    setContext({ flow: 'mapValidation', details: { type: 'searchMarker' } })
+    await waitForMapToLoad(page)
+    const marker = page
+      .locator('#map img[src*="transparent.png"], #map img[src*="maps.gstatic.com"], #map img[src*="mapfiles/transparent.png"]')
+      .first()
+    await marker.waitFor({ state: 'visible', timeout: 15000 })
+    // Dark strong highlight
+    await highlight(page, marker, {
+      borderColor: 'darkred',
+      backgroundColor: 'rgba(0,0,0,0.35)',
+      borderWidth: 4
+    })
 
-//     logInfo('Map marker image detected and highlighted')
-//     // Pause so you can visually see it
-//     await fastWait(page, 2500)
-//     markerOk = true
-//   } catch (e) {
-//     addWarning('Expected map marker (transparent image) did not appear after selecting search suggestion')
-//     try {
-//       await page.screenshot({
-//         path: `search-marker-missing-${Date.now()}.png`,
-//         fullPage: true
-//       })
-//     } catch {}
-//   }
-//   if (!markerOk) return
+    logInfo('Map marker image detected and highlighted')
+    // Pause so you can visually see it
+    await fastWait(page, 2500)
+    markerOk = true
+  } catch (e) {
+    addWarning('Expected map marker (transparent image) did not appear after selecting search suggestion')
+    try {
+      await page.screenshot({
+        path: `search-marker-missing-${Date.now()}.png`,
+        fullPage: true
+      })
+    } catch {}
+  }
+  if (!markerOk) return
 
 
-//   await showStep(page, 'Step 8: ✅ Search UI test completed (marker verified)')
-//   if (WARNINGS.length > 0) {
-//     try {
-//       testInfo.attachments = testInfo.attachments || []
-//       testInfo.annotations = testInfo.annotations || []
-//       testInfo.annotations.push({
-//         type: 'warning',
-//         description: WARNINGS.map(w => `${w.time} — ${w.message}`).join('\n')
-//       })
-//     } catch (err) {
-//       console.warn('Failed to attach warnings to testInfo:', err)
-//     }
-//   }
-// })
+  await showStep(page, 'Step 8: ✅ Search UI test completed (marker verified)')
+  if (WARNINGS.length > 0) {
+    try {
+      testInfo.attachments = testInfo.attachments || []
+      testInfo.annotations = testInfo.annotations || []
+      testInfo.annotations.push({
+        type: 'warning',
+        description: WARNINGS.map(w => `${w.time} — ${w.message}`).join('\n')
+      })
+    } catch (err) {
+      console.warn('Failed to attach warnings to testInfo:', err)
+    }
+  }
+})
 
-// test('[P1] 4: Coordinates — enter lat/lon and zoom to place', async ({}, testInfo) => {
-//   CURRENT_TESTCASE = '[P1] 4: Coordinates — enter lat/lon and zoom to place'
+test('[P1] 4: Coordinates — enter lat/lon and zoom to place', async ({}, testInfo) => {
+  CURRENT_TESTCASE = '[P1] 4: Coordinates — enter lat/lon and zoom to place'
 
-//   await showStep(page, 'Step 1: Opening datastore landing page')
-//   const s1 = await openLanding(page); if (!s1) return
+  await showStep(page, 'Step 1: Opening datastore landing page')
+  const s1 = await openLanding(page); if (!s1) return
 
-//   await showStep(page, 'Step 2: Closing wizard modal')
-//   try { await S2closeWizardModal(page); await fastWait(page, 800) } catch { addWarning('Unable to close wizard modal') }
+  await showStep(page, 'Step 2: Closing wizard modal')
+  try { await S2closeWizardModal(page); await fastWait(page, 800) } catch { addWarning('Unable to close wizard modal') }
 
-//   await showStep(page, 'Step 3: Open "Enter Coordinates" modal (click coords nav link)')
-//   if (!await clickWhenVisible(page, Locators.coordsBtn, { timeout: 10000, force: true, annotate: true, label: 'Coords' })) { addWarning('Coordinates nav button not found'); return }
+  await showStep(page, 'Step 3: Open "Enter Coordinates" modal (click coords nav link)')
+  if (!await clickWhenVisible(page, Locators.coordsBtn, { timeout: 10000, force: true, annotate: true, label: 'Coords' })) { addWarning('Coordinates nav button not found'); return }
 
-//   await showStep(page, 'Step 4: Verify coordinates modal opens and highlight it')
-//   if (!await waitForAndHighlight(page, Locators.coordsModalTitle, 12000)) { addWarning('Enter Coordinates modal did not appear'); return }
+  await showStep(page, 'Step 4: Verify coordinates modal opens and highlight it')
+  if (!await waitForAndHighlight(page, Locators.coordsModalTitle, 12000)) { addWarning('Enter Coordinates modal did not appear'); return }
 
-//   await showStep(page, 'Step 5: Fill Latitude / Longitude and highlight inputs + Take Me button')
-//   try {
-//     await waitForAndHighlight(page, Locators.latInput, 8000); await Locators.latInput(page).fill('18.5246')
-//     await waitForAndHighlight(page, Locators.lonInput, 8000); await Locators.lonInput(page).fill('73.8786')
-//     await waitForAndHighlight(page, Locators.takeMeBtn, 8000)
-//   } catch (e) { addWarning('Unable to locate/fill coordinate inputs or highlight Take Me button'); return }
+  await showStep(page, 'Step 5: Fill Latitude / Longitude and highlight inputs + Take Me button')
+  try {
+    await waitForAndHighlight(page, Locators.latInput, 8000); await Locators.latInput(page).fill('18.5246')
+    await waitForAndHighlight(page, Locators.lonInput, 8000); await Locators.lonInput(page).fill('73.8786')
+    await waitForAndHighlight(page, Locators.takeMeBtn, 8000)
+  } catch (e) { addWarning('Unable to locate/fill coordinate inputs or highlight Take Me button'); return }
 
-//  await showStep(page, 'Step 6: Click "Take Me" and wait for map marker/transparent image to appear')
+ await showStep(page, 'Step 6: Click "Take Me" and wait for map marker/transparent image to appear')
 
-//   if (!await clickWhenVisible(page, Locators.takeMeBtn, { timeout: 8000, force: true })) {
-//     addWarning('Failed to click Take Me button')
-//     return
-//   }
+  if (!await clickWhenVisible(page, Locators.takeMeBtn, { timeout: 8000, force: true })) {
+    addWarning('Failed to click Take Me button')
+    return
+  }
 
-//   let markerOk = false
+  let markerOk = false
 
-//   try {
-//     setContext({ flow: 'mapValidation', details: { type: 'coordinateMarker' } })
+  try {
+    setContext({ flow: 'mapValidation', details: { type: 'coordinateMarker' } })
 
-//     await waitForMapToLoad(page)
+    await waitForMapToLoad(page)
 
-//     const marker = page
-//       .locator('#map img[src*="transparent.png"], #map img[src*="maps.gstatic.com"], #map img[src*="mapfiles/transparent.png"]')
-//       .first()
+    const marker = page
+      .locator('#map img[src*="transparent.png"], #map img[src*="maps.gstatic.com"], #map img[src*="mapfiles/transparent.png"]')
+      .first()
 
-//     await marker.waitFor({ state: 'visible', timeout: 15000 })
+    await marker.waitFor({ state: 'visible', timeout: 15000 })
 
-//     // Dark visible highlight
-//     await highlight(page, marker, {
-//       borderColor: 'darkblue',
-//       backgroundColor: 'rgba(0,0,0,0.35)',
-//       borderWidth: 4
-//     })
+    // Dark visible highlight
+    await highlight(page, marker, {
+      borderColor: 'darkblue',
+      backgroundColor: 'rgba(0,0,0,0.35)',
+      borderWidth: 4
+    })
 
-//     logInfo('Coordinate marker image detected and highlighted')
+    logInfo('Coordinate marker image detected and highlighted')
 
-//     // Pause so you can visually confirm it
-//     await fastWait(page, 2500)
+    // Pause so you can visually confirm it
+    await fastWait(page, 2500)
 
-//     markerOk = true
+    markerOk = true
 
-//   } catch (e) {
-//     addWarning('Expected map marker (transparent image) did not appear after submitting coordinates')
+  } catch (e) {
+    addWarning('Expected map marker (transparent image) did not appear after submitting coordinates')
 
-//     try {
-//       await page.screenshot({
-//         path: `coordinates-marker-missing-${Date.now()}.png`,
-//         fullPage: true
-//       })
-//     } catch {}
-//   }
+    try {
+      await page.screenshot({
+        path: `coordinates-marker-missing-${Date.now()}.png`,
+        fullPage: true
+      })
+    } catch {}
+  }
 
-//   if (!markerOk) return
-//   await showStep(page, 'Step 7: ✅ Coordinates test completed (marker verified)')
-// })
+  if (!markerOk) return
+  await showStep(page, 'Step 7: ✅ Coordinates test completed (marker verified)')
+})
 
 test('[P1] 5: Upload KMZ and verify map info window (zoom to place)', async ({}, testInfo) => {
   CURRENT_TESTCASE = '[P1] 5: Upload KMZ and verify map info window (zoom to place)'
@@ -1992,301 +1992,301 @@ test('[P1] 5: Upload KMZ and verify map info window (zoom to place)', async ({},
   await showStep(page, 'Step 7: ✅ KMZ upload and map verification completed')
 })
 
-// test('[P1] 6: Locate (go to current location)', async ({}, testInfo) => {
-//   CURRENT_TESTCASE = '[P1] 6: Locate (go to current location)'
+test('[P1] 6: Locate (go to current location)', async ({}, testInfo) => {
+  CURRENT_TESTCASE = '[P1] 6: Locate (go to current location)'
 
-//   await showStep(page, 'Step 1: Opening datastore landing page')
-//   const s1 = await openLanding(page); if (!s1) return
+  await showStep(page, 'Step 1: Opening datastore landing page')
+  const s1 = await openLanding(page); if (!s1) return
 
-//   await showStep(page, 'Step 2: Closing wizard modal')
-//   try { await S2closeWizardModal(page); await fastWait(page, 800) } catch { addWarning('Unable to close wizard modal'); return }
+  await showStep(page, 'Step 2: Closing wizard modal')
+  try { await S2closeWizardModal(page); await fastWait(page, 800) } catch { addWarning('Unable to close wizard modal'); return }
 
-//   await showStep(page, 'Step 3: Grant geolocation permission and set location')
-//   try {
-//     const geo = { latitude: 22.7196, longitude: 75.8577, accuracy: 50 }
-//     try {
-//       await context.grantPermissions(['geolocation'], { origin: CONFIG.BASE_URL })
-//     } catch {
-//       try { await context.grantPermissions(['geolocation']) } catch {}
-//     }
-//     try { await context.setGeolocation({ latitude: geo.latitude, longitude: geo.longitude, accuracy: geo.accuracy || 50 }) } catch (e) { addWarning('Could not set geolocation on context: ' + (e?.message || e)) }
-//   } catch (e) { addWarning('Failed to prepare geolocation permission: ' + (e?.message || e)); return }
+  await showStep(page, 'Step 3: Grant geolocation permission and set location')
+  try {
+    const geo = { latitude: 22.7196, longitude: 75.8577, accuracy: 50 }
+    try {
+      await context.grantPermissions(['geolocation'], { origin: CONFIG.BASE_URL })
+    } catch {
+      try { await context.grantPermissions(['geolocation']) } catch {}
+    }
+    try { await context.setGeolocation({ latitude: geo.latitude, longitude: geo.longitude, accuracy: geo.accuracy || 50 }) } catch (e) { addWarning('Could not set geolocation on context: ' + (e?.message || e)) }
+  } catch (e) { addWarning('Failed to prepare geolocation permission: ' + (e?.message || e)); return }
 
-//   await showStep(page, 'Step 4: Click Locate button and verify current location marker')
+  await showStep(page, 'Step 4: Click Locate button and verify current location marker')
 
-//   try {
-//     setContext({ flow: 'locateFlow', details: { type: 'currentLocation' } })
+  try {
+    setContext({ flow: 'locateFlow', details: { type: 'currentLocation' } })
 
-//     const locateNav = Locators.locateNav(page)
-//     await expect(locateNav).toBeVisible({ timeout: 10000 })
-//     await highlight(page, locateNav)
+    const locateNav = Locators.locateNav(page)
+    await expect(locateNav).toBeVisible({ timeout: 10000 })
+    await highlight(page, locateNav)
 
-//     const locateLink = locateNav.locator('a').first()
-//     await expect(locateLink).toBeVisible({ timeout: 5000 })
-//     await highlight(page, locateLink)
+    const locateLink = locateNav.locator('a').first()
+    await expect(locateLink).toBeVisible({ timeout: 5000 })
+    await highlight(page, locateLink)
 
-//     await Promise.all([
-//       locateLink.click(),
-//       fastWait(page, 600)
-//     ])
+    await Promise.all([
+      locateLink.click(),
+      fastWait(page, 600)
+    ])
 
-//     await waitForMapToLoad(page)
+    await waitForMapToLoad(page)
 
-//     const marker = page
-//       .locator('#map img[src*="transparent.png"], #map img[src*="maps.gstatic.com"], #map img[src*="mapfiles/transparent.png"]')
-//       .first()
+    const marker = page
+      .locator('#map img[src*="transparent.png"], #map img[src*="maps.gstatic.com"], #map img[src*="mapfiles/transparent.png"]')
+      .first()
 
-//     await marker.waitFor({ state: 'visible', timeout: 15000 })
+    await marker.waitFor({ state: 'visible', timeout: 15000 })
 
-//     // 🔥 Strong dark highlight
-//     await highlight(page, marker, {
-//       borderColor: 'green',
-//       backgroundColor: 'rgba(0, 0, 0, 0.91)',
-//       borderWidth: 4
-//     })
+    // 🔥 Strong dark highlight
+    await highlight(page, marker, {
+      borderColor: 'green',
+      backgroundColor: 'rgba(0, 0, 0, 0.91)',
+      borderWidth: 4
+    })
 
-//     logInfo('Locate marker detected', {
-//       selector: await marker.evaluate(e => e.getAttribute('src')) || 'unknown'
-//     })
+    logInfo('Locate marker detected', {
+      selector: await marker.evaluate(e => e.getAttribute('src')) || 'unknown'
+    })
 
-//     // 👀 Pause so you can clearly see it
-//     await fastWait(page, 5500)
+    // 👀 Pause so you can clearly see it
+    await fastWait(page, 5500)
 
-//   } catch (e) {
-//     addWarning('Current location marker did not appear on the map after clicking Locate')
+  } catch (e) {
+    addWarning('Current location marker did not appear on the map after clicking Locate')
 
-//     try {
-//       await saveMapScreenshot(page, 'locate', 'marker_missing', true)
-//     } catch {}
+    try {
+      await saveMapScreenshot(page, 'locate', 'marker_missing', true)
+    } catch {}
 
-//     return
-//   }
+    return
+  }
 
-//   await showStep(page, 'Step 5: ✅ Locate flow verified (marker visible)')
-// })
+  await showStep(page, 'Step 5: ✅ Locate flow verified (marker visible)')
+})
 
-// test('[P1] 7: Hover locationer — show coordinates on mouse hover', async ({}, testInfo) => {
-//   CURRENT_TESTCASE = '[P1] 7: Hover locationer — show coordinates on mouse hover'
+test('[P1] 7: Hover locationer — show coordinates on mouse hover', async ({}, testInfo) => {
+  CURRENT_TESTCASE = '[P1] 7: Hover locationer — show coordinates on mouse hover'
 
-//   await showStep(page, 'Step 1: Opening datastore landing page')
-//   const s1 = await openLanding(page); if (!s1) return
+  await showStep(page, 'Step 1: Opening datastore landing page')
+  const s1 = await openLanding(page); if (!s1) return
 
-//   await showStep(page, 'Step 2: Closing wizard modal')
-//   try { await S2closeWizardModal(page); await fastWait(page, 600) } catch { addWarning('Unable to close wizard modal'); return }
+  await showStep(page, 'Step 2: Closing wizard modal')
+  try { await S2closeWizardModal(page); await fastWait(page, 600) } catch { addWarning('Unable to close wizard modal'); return }
 
-//   await showStep(page, 'Step 3: Enable hover location control')
-//   try {
-//     const hoverAnchor = Locators.hoverAnchor(page)
-//     const hoverCheckbox = Locators.hoverCheckbox(page)
-//     if (await hoverAnchor.count() > 0 && await hoverAnchor.isVisible().catch(() => false)) {
-//       await highlight(page, hoverAnchor); await hoverAnchor.click(); await fastWait(page, 300)
-//     } else if (await hoverCheckbox.count() > 0) {
-//       await highlight(page, hoverCheckbox); try { await hoverCheckbox.check() } catch { await hoverCheckbox.click() }; await fastWait(page, 300)
-//     } else {
-//       throw new Error('Neither hover anchor nor checkbox found')
-//     }
-//   } catch (e) {
-//     addWarning('Unable to enable hover location toggle: ' + (e?.message || e))
-//     return
-//   }
+  await showStep(page, 'Step 3: Enable hover location control')
+  try {
+    const hoverAnchor = Locators.hoverAnchor(page)
+    const hoverCheckbox = Locators.hoverCheckbox(page)
+    if (await hoverAnchor.count() > 0 && await hoverAnchor.isVisible().catch(() => false)) {
+      await highlight(page, hoverAnchor); await hoverAnchor.click(); await fastWait(page, 300)
+    } else if (await hoverCheckbox.count() > 0) {
+      await highlight(page, hoverCheckbox); try { await hoverCheckbox.check() } catch { await hoverCheckbox.click() }; await fastWait(page, 300)
+    } else {
+      throw new Error('Neither hover anchor nor checkbox found')
+    }
+  } catch (e) {
+    addWarning('Unable to enable hover location toggle: ' + (e?.message || e))
+    return
+  }
 
-//   await showStep(page, 'Step 4: Hover on map to get coordinates and verify #position_on_hover')
-//   const mapLocator = Locators.mapContainer(page)
-//   const posLocator = Locators.positionOnHover(page)
-//   try {
-//     await expect(mapLocator).toBeVisible({ timeout: 15000 })
-//     await mapLocator.scrollIntoViewIfNeeded()
-//     try { await focusPage(page) } catch {}
-//     const box = await mapLocator.boundingBox()
-//     if (!box) { addWarning('Map bounding box not found — cannot perform hover test'); return }
+  await showStep(page, 'Step 4: Hover on map to get coordinates and verify #position_on_hover')
+  const mapLocator = Locators.mapContainer(page)
+  const posLocator = Locators.positionOnHover(page)
+  try {
+    await expect(mapLocator).toBeVisible({ timeout: 15000 })
+    await mapLocator.scrollIntoViewIfNeeded()
+    try { await focusPage(page) } catch {}
+    const box = await mapLocator.boundingBox()
+    if (!box) { addWarning('Map bounding box not found — cannot perform hover test'); return }
 
-//     const gridOffsets = [
-//       { dx: 0, dy: 0 },
-//       { dx: -100, dy: -60 },
-//       { dx: 100, dy: -60 },
-//       { dx: -100, dy: 60 },
-//       { dx: 100, dy: 60 },
-//       { dx: -40, dy: 0 },
-//       { dx: 40, dy: 0 },
-//       { dx: 0, dy: -120 },
-//       { dx: 0, dy: 120 }
-//     ]
-//     let found = false
-//     for (const off of gridOffsets) {
-//       const targetX = Math.round(box.x + box.width / 2 + off.dx)
-//       const targetY = Math.round(box.y + box.height / 2 + off.dy)
-//       try {
-//         await page.mouse.move(Math.max(0, targetX - 30), Math.max(0, targetY - 30), { steps: 10 })
-//         await page.mouse.move(targetX, targetY, { steps: 6 })
-//       } catch {}
-//       await fastWait(page, 600)
-//       if (await posLocator.count() > 0 && await posLocator.isVisible().catch(() => false)) {
-//         const txt = (await getInnerTextSafe(posLocator)) || ''
-//         if (/latitude[:\s]*\d+/i.test(txt) && /longitude[:\s]*\d+/i.test(txt)) {
-//           found = true
-//           await highlight(page, posLocator)
-//           logInfo('Hover position detected', { text: txt })
-//           break
-//         }
-//       }
-//     }
-//     for (let i = 0; i < 6 && !found; i++) {
-//       const rx = Math.round(box.x + box.width * (0.3 + Math.random() * 0.4))
-//       const ry = Math.round(box.y + box.height * (0.3 + Math.random() * 0.4))
-//       try { await page.mouse.move(rx, ry, { steps: 6 }) } catch {}
-//       await fastWait(page, 450)
-//       if (await posLocator.count() > 0 && await posLocator.isVisible().catch(() => false)) {
-//         const txt = (await getInnerTextSafe(posLocator)) || ''
-//         if (/latitude[:\s]*\d+/i.test(txt) && /longitude[:\s]*\d+/i.test(txt)) {
-//           found = true
-//           await highlight(page, posLocator)
-//           logInfo('Hover position detected (random fallback)', { text: txt })
-//           break
-//         }
-//       }
-//     }
-//     if (!found) {
-//       addWarning('Hover position element (#position_on_hover) did not appear or did not contain coordinates')
-//       await saveMapScreenshot(page, 'hover', 'position_missing', true)
-//       return
-//     }
-//   } catch (e) {
-//     addWarning('Error while attempting hover location detection: ' + (e?.message || e))
-//     return
-//   }
-//   await showStep(page, 'Step 5: ✅ Hover locationer verified (coordinates shown)')
-// })
+    const gridOffsets = [
+      { dx: 0, dy: 0 },
+      { dx: -100, dy: -60 },
+      { dx: 100, dy: -60 },
+      { dx: -100, dy: 60 },
+      { dx: 100, dy: 60 },
+      { dx: -40, dy: 0 },
+      { dx: 40, dy: 0 },
+      { dx: 0, dy: -120 },
+      { dx: 0, dy: 120 }
+    ]
+    let found = false
+    for (const off of gridOffsets) {
+      const targetX = Math.round(box.x + box.width / 2 + off.dx)
+      const targetY = Math.round(box.y + box.height / 2 + off.dy)
+      try {
+        await page.mouse.move(Math.max(0, targetX - 30), Math.max(0, targetY - 30), { steps: 10 })
+        await page.mouse.move(targetX, targetY, { steps: 6 })
+      } catch {}
+      await fastWait(page, 600)
+      if (await posLocator.count() > 0 && await posLocator.isVisible().catch(() => false)) {
+        const txt = (await getInnerTextSafe(posLocator)) || ''
+        if (/latitude[:\s]*\d+/i.test(txt) && /longitude[:\s]*\d+/i.test(txt)) {
+          found = true
+          await highlight(page, posLocator)
+          logInfo('Hover position detected', { text: txt })
+          break
+        }
+      }
+    }
+    for (let i = 0; i < 6 && !found; i++) {
+      const rx = Math.round(box.x + box.width * (0.3 + Math.random() * 0.4))
+      const ry = Math.round(box.y + box.height * (0.3 + Math.random() * 0.4))
+      try { await page.mouse.move(rx, ry, { steps: 6 }) } catch {}
+      await fastWait(page, 450)
+      if (await posLocator.count() > 0 && await posLocator.isVisible().catch(() => false)) {
+        const txt = (await getInnerTextSafe(posLocator)) || ''
+        if (/latitude[:\s]*\d+/i.test(txt) && /longitude[:\s]*\d+/i.test(txt)) {
+          found = true
+          await highlight(page, posLocator)
+          logInfo('Hover position detected (random fallback)', { text: txt })
+          break
+        }
+      }
+    }
+    if (!found) {
+      addWarning('Hover position element (#position_on_hover) did not appear or did not contain coordinates')
+      await saveMapScreenshot(page, 'hover', 'position_missing', true)
+      return
+    }
+  } catch (e) {
+    addWarning('Error while attempting hover location detection: ' + (e?.message || e))
+    return
+  }
+  await showStep(page, 'Step 5: ✅ Hover locationer verified (coordinates shown)')
+})
 
-// test('[P1] 8: AOI_view (zoom back to AOI) and World View', async ({}, testInfo) => {
-//   CURRENT_TESTCASE = '[P1] 8: AOI_view (zoom back to AOI) and World View'
+test('[P1] 8: AOI_view (zoom back to AOI) and World View', async ({}, testInfo) => {
+  CURRENT_TESTCASE = '[P1] 8: AOI_view (zoom back to AOI) and World View'
 
-//   await showStep(page, 'Step 1: Open landing page')
-//   if (!await openLanding(page)) return
+  await showStep(page, 'Step 1: Open landing page')
+  if (!await openLanding(page)) return
 
-//   await showStep(page, 'Step 1A: Close wizard modal (if present)')
-//   try { await S2closeWizardModal(page); await fastWait(page, 600) } catch { addWarning('Unable to close wizard modal (non-blocking)') }
+  await showStep(page, 'Step 1A: Close wizard modal (if present)')
+  try { await S2closeWizardModal(page); await fastWait(page, 600) } catch { addWarning('Unable to close wizard modal (non-blocking)') }
 
-//   await showStep(page, 'Waiting for map to fully load')
-//   try { await waitForMapToLoad(page) } catch (e) { addWarning('Map did not load as expected: ' + (e?.message || e)); return }
+  await showStep(page, 'Waiting for map to fully load')
+  try { await waitForMapToLoad(page) } catch (e) { addWarning('Map did not load as expected: ' + (e?.message || e)); return }
 
-//   await showStep(page, 'Step 2: Zoom until AOI tools appear and draw rectangle AOI')
-//   try { await zoomUntilAOI(page, 12) } catch (e) { addWarning('AOI toolbar did not appear after zoom attempts: ' + (e?.message || e)) }
+  await showStep(page, 'Step 2: Zoom until AOI tools appear and draw rectangle AOI')
+  try { await zoomUntilAOI(page, 12) } catch (e) { addWarning('AOI toolbar did not appear after zoom attempts: ' + (e?.message || e)) }
 
-//   try { await openAndDrawRectangleAOI(page) } catch (e) { addWarning('Failed to draw rectangle AOI: ' + (e?.message || e)); return }
+  try { await openAndDrawRectangleAOI(page) } catch (e) { addWarning('Failed to draw rectangle AOI: ' + (e?.message || e)); return }
 
-//   await fastWait(page, 700)
-//   const aoiBefore = await waitForAOIOnMap(page, 9000)
-//   if (!aoiBefore) addWarning('AOI was not detectable immediately after drawing')
+  await fastWait(page, 700)
+  const aoiBefore = await waitForAOIOnMap(page, 9000)
+  if (!aoiBefore) addWarning('AOI was not detectable immediately after drawing')
 
-//   if (aoiBefore && aoiBefore.locator) {
-//     try { await highlight(page, aoiBefore.locator, { borderColor: 'rgba(0,200,120,0.95)', pause: 900 }); await annotateElementLabel(page, aoiBefore.locator, 'AOI - BEFORE', { border: '2px solid rgba(0,200,120,0.95)' }); await fastWait(page, 400) } catch {}
-//   }
+  if (aoiBefore && aoiBefore.locator) {
+    try { await highlight(page, aoiBefore.locator, { borderColor: 'rgba(0,200,120,0.95)', pause: 900 }); await annotateElementLabel(page, aoiBefore.locator, 'AOI - BEFORE', { border: '2px solid rgba(0,200,120,0.95)' }); await fastWait(page, 400) } catch {}
+  }
 
-//   await showStep(page, 'Step 3: Click side nav once')
-//   try { await ensureSideNavClosed(page) } catch (e) { addWarning('Unable to click side nav toggle: ' + (e?.message || e)) }
+  await showStep(page, 'Step 3: Click side nav once')
+  try { await ensureSideNavClosed(page) } catch (e) { addWarning('Unable to click side nav toggle: ' + (e?.message || e)) }
 
-//   await showStep(page, 'Step 3A: Take screenshot A (baseline with drawn AOI)')
-//   const screenshotA = await saveMapScreenshot(page, (aoiBefore && aoiBefore.selector) ? aoiBefore.selector.replace(/[^a-z0-9_-]/gi, '') : 'aoi', 'A', false)
-//   await showStep(page, `Screenshot A saved: ${screenshotA || 'failed-to-save'}`)
+  await showStep(page, 'Step 3A: Take screenshot A (baseline with drawn AOI)')
+  const screenshotA = await saveMapScreenshot(page, (aoiBefore && aoiBefore.selector) ? aoiBefore.selector.replace(/[^a-z0-9_-]/gi, '') : 'aoi', 'A', false)
+  await showStep(page, `Screenshot A saved: ${screenshotA || 'failed-to-save'}`)
 
-//   await showStep(page, 'Step 4: Click #world_view (zoom out to world level)')
-//   try { await clickWhenVisible(page, Locators.worldViewBtn, { timeout: 8000, force: true, annotate: true, label: 'World View' }) } catch (e) { addWarning('World view button not clickable') }
+  await showStep(page, 'Step 4: Click #world_view (zoom out to world level)')
+  try { await clickWhenVisible(page, Locators.worldViewBtn, { timeout: 8000, force: true, annotate: true, label: 'World View' }) } catch (e) { addWarning('World view button not clickable') }
 
-//   await fastWait(page, 1200)
-//   try { await waitForMapToLoad(page) } catch {}
+  await fastWait(page, 1200)
+  try { await waitForMapToLoad(page) } catch {}
 
-//   const aoiAfterWorld = await waitForAOIOnMap(page, 8000)
-//   if (aoiAfterWorld && aoiAfterWorld.locator) {
-//     try { await highlight(page, aoiAfterWorld.locator, { borderColor: 'rgba(255,165,0,0.95)', pause: 900 }); await annotateElementLabel(page, aoiAfterWorld.locator, 'AOI - WORLD', { border: '2px solid rgba(255,165,0,0.95)' }); await fastWait(page, 400) } catch {}
-//   }
-//   await showStep(page, 'Step 4A: Take screenshot B (after world view)')
-//   const screenshotB = await saveMapScreenshot(page, (aoiBefore && aoiBefore.selector) ? aoiBefore.selector.replace(/[^a-z0-9_-]/gi, '') : 'aoi', 'B', false)
-//   await showStep(page, `Screenshot B saved: ${screenshotB || 'failed-to-save'}`)
+  const aoiAfterWorld = await waitForAOIOnMap(page, 8000)
+  if (aoiAfterWorld && aoiAfterWorld.locator) {
+    try { await highlight(page, aoiAfterWorld.locator, { borderColor: 'rgba(255,165,0,0.95)', pause: 900 }); await annotateElementLabel(page, aoiAfterWorld.locator, 'AOI - WORLD', { border: '2px solid rgba(255,165,0,0.95)' }); await fastWait(page, 400) } catch {}
+  }
+  await showStep(page, 'Step 4A: Take screenshot B (after world view)')
+  const screenshotB = await saveMapScreenshot(page, (aoiBefore && aoiBefore.selector) ? aoiBefore.selector.replace(/[^a-z0-9_-]/gi, '') : 'aoi', 'B', false)
+  await showStep(page, `Screenshot B saved: ${screenshotB || 'failed-to-save'}`)
 
-//   await showStep(page, 'Step 5: Click #AOI_view (zoom back to AOI)')
-//   try { await clickWhenVisible(page, Locators.aoiViewBtn, { timeout: 8000, force: true, annotate: true, label: 'AOI View' }) } catch (e) { addWarning('AOI view button not clickable') }
+  await showStep(page, 'Step 5: Click #AOI_view (zoom back to AOI)')
+  try { await clickWhenVisible(page, Locators.aoiViewBtn, { timeout: 8000, force: true, annotate: true, label: 'AOI View' }) } catch (e) { addWarning('AOI view button not clickable') }
 
-//   await fastWait(page, 1200)
-//   try { await waitForMapToLoad(page) } catch {}
+  await fastWait(page, 1200)
+  try { await waitForMapToLoad(page) } catch {}
 
-//   const aoiAfterAOIView = await waitForAOIOnMap(page, 10000)
-//   if (aoiAfterAOIView && aoiAfterAOIView.locator) {
-//     try { await highlight(page, aoiAfterAOIView.locator, { borderColor: 'rgba(0,120,255,0.95)', pause: 900 }); await annotateElementLabel(page, aoiAfterAOIView.locator, 'AOI - AOI_VIEW', { border: '2px solid rgba(0,120,255,0.95)' }); await fastWait(page, 400) } catch {}
-//   }
-//   await showStep(page, 'Step 5A: Take screenshot C (after AOI_view)')
-//   const screenshotC = await saveMapScreenshot(page, (aoiBefore && aoiBefore.selector) ? aoiBefore.selector.replace(/[^a-z0-9_-]/gi, '') : 'aoi', 'C', false)
-//   await showStep(page, `Screenshot C saved: ${screenshotC || 'failed-to-save'}`)
+  const aoiAfterAOIView = await waitForAOIOnMap(page, 10000)
+  if (aoiAfterAOIView && aoiAfterAOIView.locator) {
+    try { await highlight(page, aoiAfterAOIView.locator, { borderColor: 'rgba(0,120,255,0.95)', pause: 900 }); await annotateElementLabel(page, aoiAfterAOIView.locator, 'AOI - AOI_VIEW', { border: '2px solid rgba(0,120,255,0.95)' }); await fastWait(page, 400) } catch {}
+  }
+  await showStep(page, 'Step 5A: Take screenshot C (after AOI_view)')
+  const screenshotC = await saveMapScreenshot(page, (aoiBefore && aoiBefore.selector) ? aoiBefore.selector.replace(/[^a-z0-9_-]/gi, '') : 'aoi', 'C', false)
+  await showStep(page, `Screenshot C saved: ${screenshotC || 'failed-to-save'}`)
 
-//   if (!aoiBefore) addWarning('Baseline AOI bbox missing — visual comparison will rely solely on screenshots A/B/C')
-//   await showStep(page, 'Step 6: ✅ AOI_view & World View visual screenshots and highlights captured (A/B/C)')
-// })
+  if (!aoiBefore) addWarning('Baseline AOI bbox missing — visual comparison will rely solely on screenshots A/B/C')
+  await showStep(page, 'Step 6: ✅ AOI_view & World View visual screenshots and highlights captured (A/B/C)')
+})
 
-// test('[P1] 9: AOI info window validation with close + reset behavior', async ({}, testInfo) => {
-//   CURRENT_TESTCASE = '[P1] 9: AOI info window validation with close + reset behavior'
+test('[P1] 9: AOI info window validation with close + reset behavior', async ({}, testInfo) => {
+  CURRENT_TESTCASE = '[P1] 9: AOI info window validation with close + reset behavior'
 
-//   await showStep(page, 'Step 1: Open landing page')
-//   if (!await openLanding(page)) return
+  await showStep(page, 'Step 1: Open landing page')
+  if (!await openLanding(page)) return
 
-//   await showStep(page, 'Step 2: Close wizard modal (if present)')
-//   try { await S2closeWizardModal(page); await fastWait(page, 600) } catch {}
+  await showStep(page, 'Step 2: Close wizard modal (if present)')
+  try { await S2closeWizardModal(page); await fastWait(page, 600) } catch {}
 
-//   await showStep(page, 'Step 3: Wait for map to fully load')
-//   try { await waitForMapToLoad(page) } catch (e) { addWarning('Map load failed'); return }
+  await showStep(page, 'Step 3: Wait for map to fully load')
+  try { await waitForMapToLoad(page) } catch (e) { addWarning('Map load failed'); return }
 
-//   await showStep(page, 'Step 4: Search and select "Vijay Nagar" (first result)')
-//   try {
-//     const opened = await openSearchModal(page)
-//     if (!opened) return
-//     const pac = await waitForSearchInputAndHighlight(page)
-//     if (!pac) return
-//     await pac.fill('Vijay Nagar')
-//     const first = Locators.pacFirstOption(page)
-//     await expect(first).toBeVisible({ timeout: 12000 })
-//     await highlight(page, first)
-//     await first.click()
-//     await waitForMapToLoad(page)
-//   } catch (e) { addWarning('Search failed'); return }
+  await showStep(page, 'Step 4: Search and select "Vijay Nagar" (first result)')
+  try {
+    const opened = await openSearchModal(page)
+    if (!opened) return
+    const pac = await waitForSearchInputAndHighlight(page)
+    if (!pac) return
+    await pac.fill('Vijay Nagar')
+    const first = Locators.pacFirstOption(page)
+    await expect(first).toBeVisible({ timeout: 12000 })
+    await highlight(page, first)
+    await first.click()
+    await waitForMapToLoad(page)
+  } catch (e) { addWarning('Search failed'); return }
 
-//   await showStep(page, 'Step 5: Draw rectangle AOI')
-//   try { await zoomUntilAOI(page, 12) } catch {}
-//   try { await openAndDrawRectangleAOI(page) } catch (e) { addWarning('AOI draw failed'); return }
-//   await fastWait(page, 800)
+  await showStep(page, 'Step 5: Draw rectangle AOI')
+  try { await zoomUntilAOI(page, 12) } catch {}
+  try { await openAndDrawRectangleAOI(page) } catch (e) { addWarning('AOI draw failed'); return }
+  await fastWait(page, 800)
 
-//   await showStep(page, 'Step 6: Click sidenav once')
-//   try { await ensureSideNavClosed(page) } catch {}
+  await showStep(page, 'Step 6: Click sidenav once')
+  try { await ensureSideNavClosed(page) } catch {}
 
-//   await showStep(page, 'Step 7: Validate 1.0 info window presence')
-//   const infoWindowContainer = Locators.infoWindowContainer(page)
-//   const isInfoVisible = await infoWindowContainer.isVisible().catch(() => false)
-//   if (!isInfoVisible) { test.fail(true, '1.0 (info window container) not visible after drawing AOI'); return }
-//   await highlight(page, infoWindowContainer)
+  await showStep(page, 'Step 7: Validate 1.0 info window presence')
+  const infoWindowContainer = Locators.infoWindowContainer(page)
+  const isInfoVisible = await infoWindowContainer.isVisible().catch(() => false)
+  if (!isInfoVisible) { test.fail(true, '1.0 (info window container) not visible after drawing AOI'); return }
+  await highlight(page, infoWindowContainer)
 
-//   await showStep(page, 'Step 8: Click 1.1 (close info window)')
-//   const closeBtn = Locators.infoWindowCloseButton(page)
-//   if (await closeBtn.isVisible().catch(() => false)) {
-//     await highlight(page, closeBtn)
-//     await closeBtn.click()
-//     await fastWait(page, 700)
-//   } else { test.fail(true, '1.1 (close button) not visible inside info window'); return }
+  await showStep(page, 'Step 8: Click 1.1 (close info window)')
+  const closeBtn = Locators.infoWindowCloseButton(page)
+  if (await closeBtn.isVisible().catch(() => false)) {
+    await highlight(page, closeBtn)
+    await closeBtn.click()
+    await fastWait(page, 700)
+  } else { test.fail(true, '1.1 (close button) not visible inside info window'); return }
 
-//   await showStep(page, 'Step 9: Click delete_all (1.2 reset button)')
-//   const deleteAllBtn = Locators.deleteAllBtn(page)
-//   if (await deleteAllBtn.isVisible().catch(() => false)) {
-//     await highlight(page, deleteAllBtn)
-//     await deleteAllBtn.click()
-//     await fastWait(page, 1200)
-//   } else { test.fail(true, 'delete_all (1.2) button not visible'); return }
+  await showStep(page, 'Step 9: Click delete_all (1.2 reset button)')
+  const deleteAllBtn = Locators.deleteAllBtn(page)
+  if (await deleteAllBtn.isVisible().catch(() => false)) {
+    await highlight(page, deleteAllBtn)
+    await deleteAllBtn.click()
+    await fastWait(page, 1200)
+  } else { test.fail(true, 'delete_all (1.2) button not visible'); return }
 
-//   await showStep(page, 'Step 10: Click sidenav once after reset')
-//   try { await ensureSideNavClosed(page) } catch {}
+  await showStep(page, 'Step 10: Click sidenav once after reset')
+  try { await ensureSideNavClosed(page) } catch {}
 
-//   await showStep(page, 'Step 11: Validate info window does NOT reappear')
-//   const closeBtnAfterReset = page.locator('.gm-ui-hover-effect')
-//   const isCloseVisibleAfterReset = await closeBtnAfterReset.isVisible().catch(() => false)
-//   if (isCloseVisibleAfterReset) {
-//     test.fail(true, 'Info window close button (1.1) appeared after reset — TEST FAILED')
-//   } else {
-//     logInfo('Info window not visible after reset — TEST PASSED')
-//   }
-//   await showStep(page, 'Testcase 9 completed')
-// })
+  await showStep(page, 'Step 11: Validate info window does NOT reappear')
+  const closeBtnAfterReset = page.locator('.gm-ui-hover-effect')
+  const isCloseVisibleAfterReset = await closeBtnAfterReset.isVisible().catch(() => false)
+  if (isCloseVisibleAfterReset) {
+    test.fail(true, 'Info window close button (1.1) appeared after reset — TEST FAILED')
+  } else {
+    logInfo('Info window not visible after reset — TEST PASSED')
+  }
+  await showStep(page, 'Testcase 9 completed')
+})
