@@ -1,0 +1,23 @@
+{
+  "name": "datastore",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "test:all": "npx playwright test",
+    "test:p0": "npx playwright test -g \"\\[P0\\]\"",
+    "test:p1": "npx playwright test -g \"\\[P1\\]\"",
+    "test:ci-fast": "npx playwright test -g \"\\[P0\\]\" --reporter=list",
+    "test:ui": "npx playwright test --ui",
+    "test:html": "npx playwright test --reporter=html",
+    "test:ci": "npx playwright install --with-deps && playwright test --reporter=list"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "@types/node": "^25.2.2",
+    "dotenv": "^17.2.4",
+    "nodemailer": "^8.0.1",
+    "twilio": "^5.12.1"
+  }
+}
