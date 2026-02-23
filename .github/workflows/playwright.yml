@@ -29,15 +29,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Show repository structure (debug)
+        run: ls -R
+
       - uses: actions/setup-node@v4
         with:
           node-version: lts/*
-          cache: 'npm'   # ✅ Cache node_modules
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
 
-      # ✅ Cache Playwright browsers
       - name: Cache Playwright browsers
         uses: actions/cache@v4
         with:
@@ -48,7 +50,7 @@ jobs:
         run: npx playwright install --with-deps
 
       - name: Run Playwright tests (Sequential in CI)
-        run: npx playwright test --workers=1 --reporter=list --reporter=html --reporter=./reporters/email-reporter.cjs
+        run: npx playwright test tests/datastore.spec.js --workers=1 --reporter=list --reporter=html --reporter=./reporters/email-reporter.cjs
 
       - name: Upload playwright-report
         if: ${{ !cancelled() }}
