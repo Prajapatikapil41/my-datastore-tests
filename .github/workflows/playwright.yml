@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [ main, master ]
   schedule:
-    - cron: '56 11 * * *'   # Runs daily at 5:05 PM IST
+    - cron: '35 11 * * *'   # 5:05 PM IST (11:35 UTC)
   workflow_dispatch:
 
 jobs:
@@ -21,7 +21,6 @@ jobs:
       SMTP_PASS: ${{ secrets.SMTP_PASS }}
       FROM_EMAIL: ${{ secrets.FROM_EMAIL }}
       TO_EMAILS: ${{ secrets.TO_EMAILS }}
-      # Optional Twilio secrets (if using SMS)
       TWILIO_SID: ${{ secrets.TWILIO_SID }}
       TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
       TWILIO_FROM: ${{ secrets.TWILIO_FROM }}
@@ -33,15 +32,23 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: lts/*
+          cache: 'npm'   # ✅ Cache node_modules
 
       - name: Install dependencies
         run: npm ci
 
+      # ✅ Cache Playwright browsers
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/package-lock.json') }}
+
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
 
-      - name: Run Playwright tests
-        run: npx playwright test --reporter=list --reporter=html --reporter=./reporters/email-reporter.js
+      - name: Run Playwright tests (Sequential in CI)
+        run: npx playwright test --workers=1 --reporter=list --reporter=html --reporter=./reporters/email-reporter.cjs
 
       - name: Upload playwright-report
         if: ${{ !cancelled() }}
