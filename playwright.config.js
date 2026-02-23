@@ -11,12 +11,13 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
 
   reporter: [
-    ['list'],                              // Console reporter
-    ['html'],                              // HTML report
-    ['./reporters/email-reporter.cjs']     // Custom email reporter
+    ['list'],
+    ['html'],
+    ['./reporters/email-reporter.cjs']
   ],
 
   use: {
+    headless: process.env.CI ? true : false,   // ✅ Headless in GitHub
     trace: 'on-first-retry'
   },
 
