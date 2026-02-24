@@ -2281,7 +2281,7 @@ test('[P1] 9: AOI info window validation with close + reset behavior', async ({}
   try { await ensureSideNavClosed(page) } catch {}
 
   await showStep(page, 'Step 11: Validate info window does NOT reappear')
-  const closeBtnAfterReset = page.locator('.gm-ui-hover-effect')
+  const closeBtnAfterResett = page.locator('.gm-ui-hover-effect')
   const isCloseVisibleAfterReset = await closeBtnAfterReset.isVisible().catch(() => false)
   if (isCloseVisibleAfterReset) {
     test.fail(true, 'Info window close button (1.1) appeared after reset — TEST FAILED')
