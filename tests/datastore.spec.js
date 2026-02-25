@@ -1,4 +1,3 @@
-// datastore.spec.refactor.js
 import { test, expect, chromium } from '@playwright/test'
 import path from 'path'
 import fs from 'fs'
@@ -805,7 +804,7 @@ async function clickOutlineAndHandle(row, page, sceneId, sceneIndex = 0) {
     return { ok: false, outlineResult: null, message: msg }
   }
 
-  try { await highlight(page, result.locator, { borderColor: 'rgba(0,120,255,0.95)', pause: 900 }) } catch {}
+  try { (page, result.locator, { pause: 900 }) } catch {}
   await showStep(page, `Outline detected (${result.type}) for ${sceneId || rowText}`)
   try { await annotateElementLabel(page, result.locator, 'OUTLINE', { border: '2px solid rgba(0,120,255,0.95)' }) } catch {}
 
@@ -826,7 +825,9 @@ async function clickOutlineAndHandle(row, page, sceneId, sceneIndex = 0) {
   return { ok: true, outlineResult: result, message: null }
 }
 
-async function clickPreviewAndHandle(row, page, sceneId, outlineResult, sceneIndex = 0) {
+// Modified: accept opts to allow a "simpleVerify" mode for specific products (2.7-2.11)
+async function clickPreviewAndHandle(row, page, sceneId, outlineResult, sceneIndex = 0, opts = {}) {
+  const { simpleVerify = false } = opts
   setContext({ flow: 'preview', scene: sceneId })
   const rowText = await getInnerTextSafe(row)
   const previewBtn = Locators.scenePreviewButton(page, row)
@@ -879,6 +880,39 @@ async function clickPreviewAndHandle(row, page, sceneId, outlineResult, sceneInd
   const savedPath = await saveMapScreenshot(page, sceneId || `row${sceneIndex+1}`, 'preview_success', false)
   await showStep(page, `Screenshot saved: ${savedPath || 'failed-to-save'}`)
 
+  // If running in simpleVerify mode (2.7-2.11) only assert that an image is present and loaded
+  if (simpleVerify) {
+    try {
+      const imgLocator = previewShown.locator
+      // find the actual <img> to inspect
+      let imgEl = null
+      const tag = await imgLocator.evaluate(e => e.tagName && e.tagName.toLowerCase()).catch(() => null)
+      if (tag === 'img') imgEl = imgLocator
+      else {
+        const nested = imgLocator.locator('img').first()
+        if (await nested.count() > 0) imgEl = nested
+      }
+
+      if (imgEl) {
+        await expect(imgEl).toBeVisible({ timeout: 10000 })
+        const loaded = await imgEl.evaluate(i => !!(i.complete && i.naturalWidth && i.naturalWidth > 0)).catch(() => false)
+        if (!loaded) {
+          addWarning(`Preview image present but not fully loaded for ${sceneId || rowText}`)
+          await saveMapScreenshot(page, sceneId || `row${sceneIndex+1}`, 'preview_not_loaded', true)
+          return { ok: false, previewResult: previewShown, previewImageSrc: previewImageSrc || '', message: 'preview image not loaded' }
+        }
+        return { ok: true, previewResult: previewShown, previewImageSrc: previewImageSrc || '', message: null }
+      }
+
+      // fallback: if no img element could be found, still consider previewShown as present
+      return { ok: true, previewResult: previewShown, previewImageSrc: previewImageSrc || '', message: null }
+    } catch (e) {
+      addWarning(`Error while simple-validating preview image for ${sceneId || rowText}: ${e?.message || e}`)
+      return { ok: false, previewResult: previewShown, previewImageSrc: previewImageSrc || '', message: 'simple preview validation failed' }
+    }
+  }
+
+  // Default (original) behavior: validate overlap and detailed checks
   if (outlineResult && outlineResult.bbox && previewShown.bbox) {
     const intersects = bboxIntersects(outlineResult.bbox, previewShown.bbox, 0.05)
     if (!intersects) {
@@ -897,7 +931,9 @@ async function clickPreviewAndHandle(row, page, sceneId, outlineResult, sceneInd
   return { ok: true, previewResult: previewShown, previewImageSrc: previewImageSrc || '', message: null }
 }
 
-async function clickDetailsAndHandle(row, page, sceneId, previewImageSrc = '', sceneIndex = 0) {
+// Modified: accept opts to allow a "simpleVerify" mode for specific products (2.7-2.11)
+async function clickDetailsAndHandle(row, page, sceneId, previewImageSrc = '', sceneIndex = 0, opts = {}) {
+  const { simpleVerify = false } = opts
   setContext({ flow: 'details', scene: sceneId })
   const rowText = await getInnerTextSafe(row)
   const detailsBtn = Locators.sceneDetailsButton(page, row)
@@ -927,6 +963,19 @@ async function clickDetailsAndHandle(row, page, sceneId, previewImageSrc = '', s
     try {
       await expect(img).toBeVisible({ timeout: DETAILS_IMAGE_WAIT_MS })
       const src = (await img.getAttribute('src')) || ''
+
+      // In simpleVerify mode we only need to confirm the detail image is present and loaded
+      if (simpleVerify) {
+        const loaded = await img.evaluate(i => !!(i.complete && i.naturalWidth && i.naturalWidth > 0)).catch(() => false)
+        if (!loaded) {
+          addWarning(`Detail image present but not fully loaded for ${sceneId || rowText}. SRC="${src}"`)
+          await saveMapScreenshot(page, sceneId || `row${sceneIndex+1}`, 'detail_not_loaded', true)
+          try { await modal.locator('button:has-text("Close"), .btn-danger, button.close').first().click() } catch {}
+          return { ok: false, detailImageSrc: src, message: 'detail image not loaded' }
+        }
+        try { await modal.locator('button:has-text("Close"), .btn-danger, button.close').first().click() } catch {}
+        return { ok: true, detailImageSrc: src, message: null }
+      }
 
       if (sceneId && src && src.includes(sceneId)) {
         await showStep(page, `Details image validated for ${sceneId}`)
@@ -1003,7 +1052,7 @@ async function clickDetailsAndHandle(row, page, sceneId, previewImageSrc = '', s
   }
 }
 
-async function processScene(row, page, sceneIndex = 0) {
+async function processScene(row, page, sceneIndex = 0, opts = {}) {
   const rowText = await getInnerTextSafe(row)
   await showStep(page, `Processing scene: ${rowText}`)
   await highlight(page, row)
@@ -1015,11 +1064,11 @@ async function processScene(row, page, sceneIndex = 0) {
   const outlineRes = await clickOutlineAndHandle(row, page, sceneId, sceneIndex)
   await page.waitForTimeout(1000)
 
-  const previewRes = await clickPreviewAndHandle(row, page, sceneId, outlineRes.outlineResult, sceneIndex)
+  const previewRes = await clickPreviewAndHandle(row, page, sceneId, outlineRes.outlineResult, sceneIndex, opts)
 
   await page.waitForTimeout(10000)
 
-  const detailsRes = await clickDetailsAndHandle(row, page, sceneId, previewRes.previewImageSrc, sceneIndex)
+  const detailsRes = await clickDetailsAndHandle(row, page, sceneId, previewRes.previewImageSrc, sceneIndex, opts)
 
   // cleanup UI overlays if present
   try {
@@ -1457,9 +1506,8 @@ async function waitForScenesTableStable(page, timeout = 120000) {
   }
 }
 
-
 /* ===============================
-   SMALL HELPERS FOR clickMapUntilInfoWindow
+   CLICK MAP UNTIL INFO WINDOW
 ================================ */
 
 async function clickMapUntilInfoWindow(p) {
@@ -1655,6 +1703,7 @@ test.afterEach(async ({}, testInfo) => {
   }
 })
 
+
 /* ===============================
    TESTS 
 ================================ */
@@ -1710,84 +1759,102 @@ test('[P0] 1: Shoping Cart and checkout page', async ({}, testInfo) => {
   }
 })
 
-test('[P0] 2: Satellite scenes — outline, preview and details verification', async ({}, testInfo) => {
-  CURRENT_TESTCASE = '[P0] 2: Satellite scenes — outline, preview and details verification'
+const PRODUCT_TESTS = [
+  { id: '2', titleSuffix: 'WorldView01', productName: 'WorldView01' },
+  { id: '2.1', titleSuffix: 'WorldView02', productName: 'WorldView02' },
+  { id: '2.2', titleSuffix: 'WorldView03', productName: 'WorldView03' },
+  { id: '2.3', titleSuffix: 'WorldView04', productName: 'WorldView04' },
+  { id: '2.4', titleSuffix: 'GeoEye1', productName: 'GeoEye1' },
+  { id: '2.5', titleSuffix: 'QuickBird', productName: 'QuickBird' },
+  { id: '2.6', titleSuffix: 'IKONOS', productName: 'IKONOS' },
+  // New: simpler verification products — only check preview/details images are present & loaded
+  { id: '2.7', titleSuffix: '21AT 30cm Archive', productName: '21AT 30cm Archive', simpleVerify: true },
+  { id: '2.8', titleSuffix: '21AT 50cm Archive', productName: '21AT 50cm Archive', simpleVerify: true },
+  { id: '2.9', titleSuffix: '21AT 80cm Archive', productName: '21AT 80cm Archive', simpleVerify: true },
+  { id: '2.10', titleSuffix: 'WV-Legion01', productName: 'WV-Legion01', simpleVerify: true },
+  { id: '2.11', titleSuffix: 'WV-Legion02', productName: 'WV-Legion02', simpleVerify: true }
+]
 
-  const MAX_PRODUCTS = Number(process.env.MAX_PRODUCTS || 1)
-  const SCENES_TABLE_TIMEOUT = Number(process.env.SCENES_TABLE_TIMEOUT || 120000)
+PRODUCT_TESTS.forEach(({ id, titleSuffix, productName, simpleVerify = false }) => {
+  test(`[P0] ${id}: Satellite scenes — ${titleSuffix} — outline, preview and details verification`, async ({}, testInfo) => {
+    CURRENT_TESTCASE = `[P0] ${id}: Satellite scenes — ${titleSuffix} — outline, preview and details verification`
 
-  await showStep(page, 'Step 1: Opening datastore landing page')
-  await openLanding(page)
+    const SCENES_TABLE_TIMEOUT = Number(process.env.SCENES_TABLE_TIMEOUT || 120000)
 
-  await showStep(page, 'Step 2: Closing wizard modal')
-  try {
-    await S2closeWizardModal(page)
-    await fastWait(page, 800)
-  } catch {
-    addWarning('Unable to close wizard modal')
-  }
+    await showStep(page, 'Step 1: Opening datastore landing page')
+    await openLanding(page)
 
-  await showStep(page, 'Step 3: Search for a place and Drawing AOI')
-  setContext({ flow: 'searchAndDraw', details: { place: 'Indore' } })
-  if (!await searchPlace(page, 'Indore')) {
-    addWarning('searchPlace failed — stopping test')
-    return
-  }
-
-  await showStep(page, 'Step 4: Open Satellite Imagery section')
-  if (!await highlightSidebarAndOpenSatellite(page)) return
-
-  await showStep(page, 'Step 5: Waiting for table to load')
-  if (!await waitForSatelliteTableWithWarning(page)) return
-
-  await showStep(page, 'Step 6: Processing Products')
-
-  const productCells = Locators.productCellsInSatelliteTable(page)
-  const totalProducts = await productCells.count()
-  const productCount = Math.min(totalProducts, MAX_PRODUCTS)
-
-  if (productCount === 0) {
-    addWarning('No products found in #table_satellite')
-    return
-  }
-
-  await showStep(page, `Processing ${productCount} product(s)`)
-
-  for (let pIndex = 0; pIndex < productCount; pIndex++) {
-    const productCell = productCells.nth(pIndex)
-    const productName = await getInnerTextSafe(productCell) || `product-${pIndex + 1}`
-
-    setContext({ flow: 'productSelection', product: productName })
-
-    await showStep(page, `Product ${pIndex + 1}/${productCount}: ${productName}`)
-    await highlight(page, productCell)
-
+    await showStep(page, 'Step 2: Closing wizard modal')
     try {
-      await productCell.click()
-    } catch (e) {
-      addWarning(`Unable to click product "${productName}"`)
-      continue
+      await S2closeWizardModal(page)
+      await fastWait(page, 800)
+    } catch {
+      addWarning('Unable to close wizard modal')
     }
 
+    await showStep(page, 'Step 3: Search for a place and Drawing AOI')
+    setContext({ flow: 'searchAndDraw', details: { place: 'Indore' } })
+    if (!await searchPlace(page, 'Indore')) {
+      addWarning('searchPlace failed — stopping test')
+      return
+    }
+
+    await showStep(page, 'Step 4: Open Satellite Imagery section')
+    if (!await highlightSidebarAndOpenSatellite(page)) return
+
+    await showStep(page, 'Step 5: Waiting for table to load')
+    if (!await waitForSatelliteTableWithWarning(page)) return
+
+    await showStep(page, `Step 6: Locate product "${productName}" in the satellite list`)
+    setContext({ flow: 'productSelection', product: productName })
+
+    // robust text-based product locator (handles spaces/special chars)
+    const productCell = page.locator('#table_satellite td div', { hasText: productName }).first()
+    if (await productCell.count() === 0) {
+      addWarning(`Product "${productName}" not found in #table_satellite — skipping test`)
+      return
+    }
+
+    await showStep(page, `Step 7: Clicking product "${productName}"`)
+    try {
+      await highlight(page, productCell)
+      await productCell.click()
+    } catch (e) {
+      addWarning(`Unable to click product "${productName}": ${e?.message || e}`)
+      return
+    }
+
+    await showStep(page, 'Step 8: Wait for scenes table to populate')
     const scenesOk = await waitForScenesTableStable(page, SCENES_TABLE_TIMEOUT)
     if (!scenesOk) {
       addWarning(`Scenes table not loaded for "${productName}"`)
-      continue
+      return
     }
 
+    // preserve original behavior: process only the first scene per product
     const scenesRows = Locators.scenesRows(page)
     const scenesCountAll = await scenesRows.count()
     const scenesCount = Math.min(1, scenesCountAll)
+
+    if (scenesCount === 0) {
+      addWarning(`No scenes available for product "${productName}"`)
+      return
+    }
 
     for (let sIdx = 0; sIdx < scenesCount; sIdx++) {
       const row = scenesRows.nth(sIdx)
       const sceneId = await getSceneIdFromRow(row)
       setContext({ flow: 'sceneProcessing', product: productName, scene: sceneId })
-      await processScene(row, page, sIdx)
+      // pass the simpleVerify option so clickPreview/clickDetails run the lighter checks for 2.7-2.11
+      await processScene(row, page, sIdx, { simpleVerify })
     }
+
+    // small settle pause and clear product context
+    await fastWait(page, 600)
     setContext({ product: '' })
-  }
-  await showStep(page, 'Step 8: Testcase 2 completed')
+
+    await showStep(page, `Step 9: ✅ Test for product "${productName}" completed`)
+  })
 })
 
 test('[P1] 3: Search UI — search location (draw AOI)', async ({}, testInfo) => {
