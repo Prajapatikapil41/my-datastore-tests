@@ -1099,7 +1099,7 @@ async function openLanding(p) {
   }
 }
 
-async function S2closeWizardModal(p) {
+async function S2closeWizardModall(p) {
   setContext({ flow: 'closeWizard' })
   const modal = await waitForAndHighlight(p, Locators.modalContent, 12000)
   if (!modal) return false
