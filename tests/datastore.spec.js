@@ -1099,7 +1099,7 @@ async function openLanding(p) {
   }
 }
 
-async function S2closeWizardModall(p) {
+async function S2closeWizardModal(p) {
   setContext({ flow: 'closeWizard' })
   const modal = await waitForAndHighlight(p, Locators.modalContent, 12000)
   if (!modal) return false
@@ -2323,7 +2323,7 @@ test('[P1] 9: AOI info window validation with close + reset behavior', async ({}
   try { await ensureSideNavClosed(page) } catch {}
 
   await showStep(page, 'Step 7: Validate 1.0 info window presence')
-  const infoWindowContainer = Locators.infoWindowContainer(page)
+  const infoWindowContainer = Locators.infoWindowContainerr(page)
   const isInfoVisible = await infoWindowContainer.isVisible().catch(() => false)
   if (!isInfoVisible) { test.fail(true, '1.0 (info window container) not visible after drawing AOI'); return }
   await highlight(page, infoWindowContainer)
