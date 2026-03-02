@@ -3,7 +3,10 @@ name: Playwright Tests
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 10,22 * * *'
+    # 10:00 AM IST  = 04:30 UTC
+    - cron: '30 4 * * *'
+    # 10:00 PM IST  = 16:30 UTC
+    - cron: '30 16 * * *'
 
 jobs:
   test:
@@ -15,18 +18,12 @@ jobs:
       SMTP_PORT: ${{ secrets.SMTP_PORT }}
       SMTP_USER: ${{ secrets.SMTP_USER }}
       SMTP_PASS: ${{ secrets.SMTP_PASS }}
-      FROM_EMAIL: ${{ secrets.FROM_EMAIL }}
-      TO_EMAILS: ${{ secrets.TO_EMAILS }}
-      TWILIO_SID: ${{ secrets.TWILIO_SID }}
-      TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
-      TWILIO_FROM: ${{ secrets.TWILIO_FROM }}
-      TO_PHONE: ${{ secrets.TO_PHONE }}
+      # Define the recipient groups using secrets
+      FAILURE_ALERT_EMAILS: ${{ secrets.FAILURE_ALERT_EMAILS }}
+      DAILY_REPORT_EMAILS: ${{ secrets.DAILY_REPORT_EMAILS }}
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Show repository structure (debug)
-        run: ls -R
 
       - uses: actions/setup-node@v4
         with:
@@ -45,7 +42,7 @@ jobs:
       - name: Install Playwright Browsers
         run: npx playwright install
 
-      - name: Run Playwright tests (Sequential in CI)
+      - name: Run Playwright tests
         run: npx playwright test tests
 
       - name: Upload playwright-report
