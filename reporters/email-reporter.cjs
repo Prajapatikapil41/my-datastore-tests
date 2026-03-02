@@ -1,11 +1,9 @@
-// reporters/email-reporter.cjs - simple email: describe where/what and attach only screenshots
+// reporters/email-reporter.cjs
 require('dotenv/config')
 const fs = require('fs')
 const path = require('path')
-const os = require('os')
 const nodemailer = require('nodemailer')
 
-function readIfExists(p) { try { return fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : null } catch { return null } }
 function escapeHtml(s = '') { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
 function getTopFrameFromStack(stack = '') {
   try {
@@ -35,34 +33,41 @@ function collectImageAttachments(result = {}) {
 
 class EmailReporter {
   constructor() {
-    this.issues = [] // each issue: { type: 'failed'|'warning', title, file, line, time, message, stack, images: [...] }
+    this.issues = [] 
+    this.stats = { passed: 0, failed: 0, skipped: 0, warnings: 0 }
   }
 
   onTestEnd(test, result) {
-    const base = {
-      title: test.title,
-      file: test.location?.file || 'unknown',
-      line: test.location?.line || '',
-      time: new Date().toLocaleString()
-    }
+    // 1. Collect Stats
+    if (result.status === 'passed') this.stats.passed++
+    else if (result.status === 'failed' || result.status === 'timedOut') this.stats.failed++
+    else this.stats.skipped++
 
-    // gather screenshot images (only)
-    const images = collectImageAttachments(result)
+    // Check for warnings
+    const hasWarning = (result.annotations || []).some(a => a.type === 'warning')
+    if (hasWarning) this.stats.warnings++
 
-    if (result.status === 'failed' || result.status === 'timedOut') {
-      this.issues.push(Object.assign({}, base, {
-        type: 'failed',
-        message: result.error?.message || 'Test failed',
-        stack: result.error?.stack || '',
-        images
-      }))
-    }
+    // 2. Collect Details (Only if issue exists)
+    if (result.status === 'failed' || result.status === 'timedOut' || hasWarning) {
+      const base = {
+        title: test.title,
+        file: test.location?.file || 'unknown',
+        line: test.location?.line || '',
+        time: new Date().toLocaleString()
+      }
+      const images = collectImageAttachments(result)
 
-    for (const ann of result.annotations || []) {
-      if (ann.type === 'warning') {
+      if (result.status === 'failed' || result.status === 'timedOut') {
         this.issues.push(Object.assign({}, base, {
+          type: 'failed',
+          message: result.error?.message || 'Test failed',
+          stack: result.error?.stack || '',
+          images
+        }))
+      } else if (hasWarning) {
+         this.issues.push(Object.assign({}, base, {
           type: 'warning',
-          message: ann.description || 'Warning',
+          message: (result.annotations.find(a => a.type === 'warning')?.description) || 'Warning',
           stack: '',
           images
         }))
@@ -71,61 +76,89 @@ class EmailReporter {
   }
 
   async onEnd() {
-    if (!this.issues.length) {
-      console.log('✅ No failures/warnings — skipping email.')
-      return
-    }
+    const totalTests = this.stats.passed + this.stats.failed + this.stats.skipped
 
-    const failuresCount = this.issues.filter(i => i.type === 'failed').length
-    const warningsCount = this.issues.filter(i => i.type === 'warning').length
-    const subject = failuresCount ? `❌ Tests: ${failuresCount} failures, ${warningsCount} warnings` : `⚠️ Tests: ${warningsCount} warnings`
+    // ---------------------------------------------------------
+    // EMAIL 1: Daily Summary (To Shaily & Utkal) - ALWAYS SEND
+    // ---------------------------------------------------------
+    if (process.env.DAILY_REPORT_EMAILS) {
+      const subject = this.stats.failed > 0 
+        ? `⚠️ Daily Report: ${this.stats.failed} Issues Found` 
+        : `✅ Daily Report: Website Working Fine`
+      
+      const text = `Hello Team,\n\nWebsite testing for https://datastore.geowgs84.com has completed.\n\n` +
+                   `Status: ${this.stats.failed > 0 ? 'Issues Detected' : 'All Systems Operational'}\n\n` +
+                   `Total Tests: ${totalTests}\n` +
+                   `Passed: ${this.stats.passed}\n` +
+                   `Failed: ${this.stats.failed}\n` +
+                   `Warnings: ${this.stats.warnings}\n\n` +
+                   `Regards,\nAutomation Team`
 
-    // Flatten unique image attachments
-    const flattened = []
-    const seen = new Set()
-    for (const it of this.issues) {
-      for (const img of it.images || []) {
-        if (!seen.has(img.path)) { flattened.push(img); seen.add(img.path) }
+      const html = `
+        <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee;">
+          <h3>Website Testing Completed</h3>
+          <p><strong>Website:</strong> <a href="https://datastore.geowgs84.com">https://datastore.geowgs84.com</a></p>
+          <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
+          <hr>
+          <p><strong>Total Tests:</strong> ${totalTests}</p>
+          <p><strong>Passed:</strong> <span style="color:green">${this.stats.passed}</span></p>
+          <p><strong>Failed:</strong> <span style="color:red">${this.stats.failed}</span></p>
+          <p><strong>Warnings:</strong> <span style="color:orange">${this.stats.warnings}</span></p>
+        </div>
+      `
+
+      try {
+        await this._sendMail(process.env.DAILY_REPORT_EMAILS, subject, text, html, [])
+        console.log(`📧 Daily summary sent to: ${process.env.DAILY_REPORT_EMAILS}`)
+      } catch (err) {
+        console.error('❌ Failed to send daily summary:', err)
       }
     }
 
-    // build short HTML + plain text
-    const htmlParts = []
-    const textLines = []
-    textLines.push(`Playwright quick report — ${new Date().toLocaleString()}`)
-    textLines.push(`Failures: ${failuresCount}  Warnings: ${warningsCount}`)
-    textLines.push('')
+    // ---------------------------------------------------------
+    // EMAIL 2: Failure Details (To Kapil) - ONLY IF ISSUES
+    // ---------------------------------------------------------
+    if (this.issues.length > 0 && process.env.FAILURE_ALERT_EMAILS) {
+      const subject = `❌ Alert: ${this.stats.failed} Failures / ${this.stats.warnings} Warnings`
+      
+      // Flatten unique image attachments
+      const flattened = []
+      const seen = new Set()
+      for (const it of this.issues) {
+        for (const img of it.images || []) {
+          if (!seen.has(img.path)) { flattened.push(img); seen.add(img.path) }
+        }
+      }
 
-    for (const it of this.issues) {
-      const top = getTopFrameFromStack(it.stack)
-      htmlParts.push(`
-        <div style="padding:10px;margin:8px 0;border-radius:6px;border:1px solid #e6e6e6;">
-          <strong>${it.type === 'failed' ? '❌ FAILURE' : '⚠️ WARNING'}</strong> &nbsp; <em>${escapeHtml(it.title)}</em><br/>
-          <small>File: ${escapeHtml(it.file)}:${escapeHtml(it.line)} &nbsp; | &nbsp; Time: ${escapeHtml(it.time)}</small>
-          <p style="margin:8px 0;padding:8px;background:#fafafa;border-radius:4px;white-space:pre-wrap;">${escapeHtml(it.message || '')}</p>
-          ${ top ? `<div style="font-size:12px;color:#666">Top: ${escapeHtml(top.raw)}</div>` : '' }
-          ${ (it.images && it.images.length) ? `<div style="margin-top:8px;font-size:13px;"><strong>Attached screenshots:</strong> ${it.images.map(a => escapeHtml(a.filename)).join(', ')}</div>` : '<div style="margin-top:8px;font-size:13px;color:#888">No screenshots attached</div>'}
-        </div>
-      `)
+      const htmlParts = []
+      const textLines = []
+      
+      for (const it of this.issues) {
+        const top = getTopFrameFromStack(it.stack)
+        htmlParts.push(`
+          <div style="padding:10px;margin:8px 0;border-radius:6px;border:1px solid #e6e6e6;">
+            <strong>${it.type === 'failed' ? '❌ FAILURE' : '⚠️ WARNING'}</strong> &nbsp; <em>${escapeHtml(it.title)}</em><br/>
+            <small>File: ${escapeHtml(it.file)}:${escapeHtml(it.line)} &nbsp; | &nbsp; Time: ${escapeHtml(it.time)}</small>
+            <p style="margin:8px 0;padding:8px;background:#fafafa;border-radius:4px;white-space:pre-wrap;">${escapeHtml(it.message || '')}</p>
+            ${ top ? `<div style="font-size:12px;color:#666">Top: ${escapeHtml(top.raw)}</div>` : '' }
+            ${ (it.images && it.images.length) ? `<div style="margin-top:8px;font-size:13px;"><strong>Attached screenshots:</strong> ${it.images.map(a => escapeHtml(a.filename)).join(', ')}</div>` : ''}
+          </div>
+        `)
+        textLines.push(`${it.type.toUpperCase()} — ${it.title}\nFile: ${it.file}:${it.line}\nMessage: ${it.message}`)
+      }
 
-      textLines.push(`${it.type === 'failed' ? 'FAIL' : 'WARN'} — ${it.title}`)
-      textLines.push(`File: ${it.file}:${it.line}  Time: ${it.time}`)
-      textLines.push(`Message: ${it.message}`)
-      if (it.stack) textLines.push(`Stack top: ${getTopFrameFromStack(it.stack)?.raw || ''}`)
-      if (it.images && it.images.length) textLines.push(`Screenshots: ${it.images.map(a => a.path).join(', ')}`)
-      textLines.push('')
-    }
-
-    // send mail
-    try {
-      await this._sendMail(subject, textLines.join('\n'), `<!doctype html><body>${htmlParts.join('')}</body>`, flattened)
-      console.log('📧 Simple report sent')
-    } catch (err) {
-      console.error('❌ Failed to send simple report:', err)
+      try {
+        await this._sendMail(process.env.FAILURE_ALERT_EMAILS, subject, textLines.join('\n\n'), `<!doctype html><body>${htmlParts.join('')}</body>`, flattened)
+        console.log(`📧 Failure alert sent to: ${process.env.FAILURE_ALERT_EMAILS}`)
+      } catch (err) {
+        console.error('❌ Failed to send failure alert:', err)
+      }
+    } else if (!this.issues.length) {
+      console.log('✅ No failures/warnings — skipping Kapil email.')
     }
   }
 
-  async _sendMail(subject, text, html, attachments = []) {
+  async _sendMail(to, subject, text, html, attachments = []) {
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: Number(process.env.SMTP_PORT || 587),
@@ -135,15 +168,12 @@ class EmailReporter {
 
     const mailOptions = {
       from: process.env.SMTP_FROM || process.env.SMTP_USER,
-      to: process.env.TO_EMAILS,
-      cc: process.env.CC_EMAILS || undefined,
-      bcc: process.env.BCC_EMAILS || undefined,
+      to, // passed dynamically
       subject,
       text,
       html,
       attachments
     }
-
     return transporter.sendMail(mailOptions)
   }
 }
