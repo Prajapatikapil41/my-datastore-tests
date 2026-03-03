@@ -96,7 +96,7 @@ class EmailReporter {
 
       const html = `
         <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee;">
-          <h3>Website Testing Completed</h3>
+          <h3>Datastore Website Testing Completed</h3>
           <p><strong>Website:</strong> <a href="https://datastore.geowgs84.com">https://datastore.geowgs84.com</a></p>
           <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
           <hr>
