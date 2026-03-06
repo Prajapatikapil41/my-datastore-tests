@@ -16,15 +16,19 @@ function getTopFrameFromStack(stack = '') {
   return null
 }
 
-function collectImageAttachments(result = {}) {
+// UPDATED: Renamed and added video extensions (.webm, .mp4)
+function collectAttachments(result = {}) {
   const atts = []
   try {
     if (!Array.isArray(result.attachments)) return atts
     for (const a of result.attachments) {
       if (!a || !a.path) continue
       const ext = path.extname(a.path).toLowerCase()
-      if (['.png', '.jpg', '.jpeg', '.webp', '.gif'].includes(ext)) {
-        try { if (fs.existsSync(a.path)) atts.push({ filename: path.basename(a.path), path: a.path }) } catch (e) {}
+      // Includes images AND videos
+      if (['.png', '.jpg', '.jpeg', '.webp', '.gif', '.webm', '.mp4'].includes(ext)) {
+        try { 
+          if (fs.existsSync(a.path)) atts.push({ filename: path.basename(a.path), path: a.path }) 
+        } catch (e) {}
       }
     }
   } catch (e) {}
@@ -55,21 +59,23 @@ class EmailReporter {
         line: test.location?.line || '',
         time: new Date().toLocaleString()
       }
-      const images = collectImageAttachments(result)
+      
+      // UPDATED: Collect both images and videos
+      const attachments = collectAttachments(result)
 
       if (result.status === 'failed' || result.status === 'timedOut') {
         this.issues.push(Object.assign({}, base, {
           type: 'failed',
           message: result.error?.message || 'Test failed',
           stack: result.error?.stack || '',
-          images
+          files: attachments // Changed property name to 'files'
         }))
       } else if (hasWarning) {
          this.issues.push(Object.assign({}, base, {
           type: 'warning',
           message: (result.annotations.find(a => a.type === 'warning')?.description) || 'Warning',
           stack: '',
-          images
+          files: attachments // Changed property name to 'files'
         }))
       }
     }
@@ -121,12 +127,12 @@ class EmailReporter {
     if (this.issues.length > 0 && process.env.FAILURE_ALERT_EMAILS) {
       const subject = `❌ Alert: ${this.stats.failed} Failures / ${this.stats.warnings} Warnings`
       
-      // Flatten unique image attachments
+      // Flatten unique attachments (images + videos)
       const flattened = []
       const seen = new Set()
       for (const it of this.issues) {
-        for (const img of it.images || []) {
-          if (!seen.has(img.path)) { flattened.push(img); seen.add(img.path) }
+        for (const file of it.files || []) {
+          if (!seen.has(file.path)) { flattened.push(file); seen.add(file.path) }
         }
       }
 
@@ -141,7 +147,7 @@ class EmailReporter {
             <small>File: ${escapeHtml(it.file)}:${escapeHtml(it.line)} &nbsp; | &nbsp; Time: ${escapeHtml(it.time)}</small>
             <p style="margin:8px 0;padding:8px;background:#fafafa;border-radius:4px;white-space:pre-wrap;">${escapeHtml(it.message || '')}</p>
             ${ top ? `<div style="font-size:12px;color:#666">Top: ${escapeHtml(top.raw)}</div>` : '' }
-            ${ (it.images && it.images.length) ? `<div style="margin-top:8px;font-size:13px;"><strong>Attached screenshots:</strong> ${it.images.map(a => escapeHtml(a.filename)).join(', ')}</div>` : ''}
+            ${ (it.files && it.files.length) ? `<div style="margin-top:8px;font-size:13px;"><strong>Attachments:</strong> ${it.files.map(a => escapeHtml(a.filename)).join(', ')}</div>` : ''}
           </div>
         `)
         textLines.push(`${it.type.toUpperCase()} — ${it.title}\nFile: ${it.file}:${it.line}\nMessage: ${it.message}`)
@@ -168,7 +174,7 @@ class EmailReporter {
 
     const mailOptions = {
       from: process.env.SMTP_FROM || process.env.SMTP_USER,
-      to, // passed dynamically
+      to, 
       subject,
       text,
       html,
