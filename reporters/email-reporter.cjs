@@ -16,7 +16,6 @@ function getTopFrameFromStack(stack = '') {
   return null
 }
 
-// UPDATED: Renamed and added video extensions (.webm, .mp4)
 function collectAttachments(result = {}) {
   const atts = []
   try {
@@ -42,16 +41,13 @@ class EmailReporter {
   }
 
   onTestEnd(test, result) {
-    // 1. Collect Stats
     if (result.status === 'passed') this.stats.passed++
     else if (result.status === 'failed' || result.status === 'timedOut') this.stats.failed++
     else this.stats.skipped++
 
-    // Check for warnings
     const hasWarning = (result.annotations || []).some(a => a.type === 'warning')
     if (hasWarning) this.stats.warnings++
 
-    // 2. Collect Details (Only if issue exists)
     if (result.status === 'failed' || result.status === 'timedOut' || hasWarning) {
       const base = {
         title: test.title,
@@ -60,7 +56,6 @@ class EmailReporter {
         time: new Date().toLocaleString()
       }
       
-      // UPDATED: Collect both images and videos
       const attachments = collectAttachments(result)
 
       if (result.status === 'failed' || result.status === 'timedOut') {
@@ -68,14 +63,14 @@ class EmailReporter {
           type: 'failed',
           message: result.error?.message || 'Test failed',
           stack: result.error?.stack || '',
-          files: attachments // Changed property name to 'files'
+          files: attachments
         }))
       } else if (hasWarning) {
          this.issues.push(Object.assign({}, base, {
           type: 'warning',
           message: (result.annotations.find(a => a.type === 'warning')?.description) || 'Warning',
           stack: '',
-          files: attachments // Changed property name to 'files'
+          files: attachments
         }))
       }
     }
@@ -85,7 +80,7 @@ class EmailReporter {
     const totalTests = this.stats.passed + this.stats.failed + this.stats.skipped
 
     // ---------------------------------------------------------
-    // EMAIL 1: Daily Summary (To Shaily & Utkal) - ALWAYS SEND
+    // EMAIL 1: Daily Summary (NO ATTACHMENTS)
     // ---------------------------------------------------------
     if (process.env.DAILY_REPORT_EMAILS) {
       const subject = this.stats.failed > 0 
@@ -114,6 +109,7 @@ class EmailReporter {
       `
 
       try {
+        // ✅ Pass empty array [] for attachments
         await this._sendMail(process.env.DAILY_REPORT_EMAILS, subject, text, html, [])
         console.log(`📧 Daily summary sent to: ${process.env.DAILY_REPORT_EMAILS}`)
       } catch (err) {
@@ -122,7 +118,7 @@ class EmailReporter {
     }
 
     // ---------------------------------------------------------
-    // EMAIL 2: Failure Details (To Kapil) - ONLY IF ISSUES
+    // EMAIL 2: Failure Details (WITH ATTACHMENTS)
     // ---------------------------------------------------------
     if (this.issues.length > 0 && process.env.FAILURE_ALERT_EMAILS) {
       const subject = `❌ Alert: ${this.stats.failed} Failures / ${this.stats.warnings} Warnings`
@@ -154,6 +150,7 @@ class EmailReporter {
       }
 
       try {
+        // ✅ Pass 'flattened' array for attachments
         await this._sendMail(process.env.FAILURE_ALERT_EMAILS, subject, textLines.join('\n\n'), `<!doctype html><body>${htmlParts.join('')}</body>`, flattened)
         console.log(`📧 Failure alert sent to: ${process.env.FAILURE_ALERT_EMAILS}`)
       } catch (err) {
