@@ -2370,7 +2370,7 @@ test('[P1] 9: AOI info window validation with close + reset behavior', async ({}
   } else { test.fail(true, 'delete_all (1.2) button not visible'); return }
 
   await showStep(page, 'Step 10: Click sidenav once after reset')
-  try { await ensureSideNavClosed(page) } catch {}
+  try { await ensureSideNavClosedd(page) } catch {}
 
   await showStep(page, 'Step 11: Validate info window does NOT reappear')
   const closeBtnAfterReset = page.locator('.gm-ui-hover-effect')
