@@ -10,7 +10,7 @@ on:
 
 jobs:
   test:
-    timeout-minutes: 110
+    timeout-minutes: 70
     runs-on: ubuntu-latest
 
     env:
