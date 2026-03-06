@@ -17,15 +17,25 @@ export default defineConfig({
   ],
 
   use: {
-    headless: process.env.CI ? true : false,   // ✅ Headless in GitHub
-    trace: 'on-first-retry'
+    headless: process.env.CI ? true : false,
+    
+    // ✅ ENABLE SCREENSHOTS ON FAILURE
+    screenshot: 'only-on-failure', 
+    
+    // ✅ ENABLE VIDEO ON FAILURE
+    // 'retain-on-failure' is best for your case: 
+    // it records every test, but deletes the video if the test passes.
+    video: 'retain-on-failure', 
+    
+    trace: 'on-first-retry',
+    viewport: null // Added based on your project config
   },
 
   projects: [
     {
       name: 'chromium',
       use: {
-        viewport: null
+        // viewport: null is moved to global use above, or keep here if preferred
       }
     }
   ],
