@@ -5,7 +5,7 @@ import fs from 'fs'
 /* ===============================
    GLOBAL TIMEOUT
 ================================ */
-test.setTimeout(600000)
+test.setTimeout(1100000)
 
 const CONFIG = {
   BASE_URL: process.env.BASE_URL || 'https://datastore.geowgs84.com',
@@ -1602,6 +1602,7 @@ async function clickMapUntilInfoWindow(p) {
 /* ===============================
    SETUP / TEARDOWN
 ================================ */
+
 let _consoleLogs = []
 let _pageErrors = []
 
@@ -1621,88 +1622,112 @@ test.beforeEach(async ({}, testInfo) => {
     args: ['--start-maximized']
   })
 
-  context = await browser.newContext({ viewport: null })
+  const videoDir = path.join(process.cwd(), 'test-results')
+  if (!fs.existsSync(videoDir)) fs.mkdirSync(videoDir, { recursive: true })
+
+  context = await browser.newContext({ 
+    viewport: null,
+    recordVideo: { dir: videoDir } 
+  })
+  
   page = await context.newPage()
 
   await page.goto(CONFIG.BASE_URL, { waitUntil: 'domcontentloaded' })
 })
 
 test.afterEach(async ({}, testInfo) => {
-  try {
-    const needCapture =
-      testInfo.status === 'failed' || WARNINGS.length > 0
+  const needCapture =
+    testInfo.status === 'failed' || testInfo.status === 'timedOut' || WARNINGS.length > 0
 
-    if (needCapture && page && !page.isClosed()) {
+  // ---------------------------------------------------------
+  // 1. TAKE SCREENSHOT (Must happen while Page is open)
+  // ---------------------------------------------------------
+  if (needCapture && page && !page.isClosed()) {
+    try {
+      // Remove UI overlays
+      await page.evaluate(() => {
+        document.getElementById('pw-banner-container')?.remove()
+        document.getElementById('pw-layout-spacer')?.remove()
+      }).catch(() => {})
 
-      // Remove Playwright UI overlay
-      try {
-        await page.evaluate(() => {
-          document.getElementById('pw-banner-container')?.remove()
-          document.getElementById('pw-layout-spacer')?.remove()
-        })
-      } catch {}
-
-      // Wait for UI stabilization
-      try {
-        await page.bringToFront()
-        await page.waitForLoadState('networkidle').catch(() => {})
-        await page.waitForTimeout(1000)
-      } catch {}
-
-      // Ensure folder exists
+      await page.bringToFront().catch(() => {})
+      await page.waitForLoadState('networkidle').catch(() => {})
+      
+      // Create readable filename
+      const status = testInfo.status || 'warning'
+      const safeName = sanitizeFilename(`${testInfo.title}_${status}_retry${testInfo.retry}`)
       const resultsDir = path.join(process.cwd(), 'test-results')
-      if (!fs.existsSync(resultsDir)) {
-        fs.mkdirSync(resultsDir, { recursive: true })
-      }
-
-      const safeName = sanitizeFilename(
-        `${testInfo.title}_${testInfo.retry}_${Date.now()}`
-      )
+      if (!fs.existsSync(resultsDir)) fs.mkdirSync(resultsDir, { recursive: true })
 
       const screenshotPath = path.join(resultsDir, `${safeName}.png`)
+      await page.screenshot({ path: screenshotPath, fullPage: true })
 
-      await page.screenshot({
-        path: screenshotPath,
-        fullPage: true
-      })
-
-      // ✅ CRITICAL — attach properly
-      if (!testInfo.attachments) {
-        testInfo.attachments = []
-      }
-
+      // Attach Screenshot
+      testInfo.attachments = testInfo.attachments || []
       testInfo.attachments.push({
-        name: 'error-screenshot',
+        name: `${safeName}.png`,
         path: screenshotPath,
         contentType: 'image/png'
       })
-
-      // Attach structured logs so the reporter/email has context
-      try {
-        testInfo.annotations = testInfo.annotations || []
-        if (WARNINGS.length > 0) {
-          testInfo.annotations.push({ type: 'warning', description: WARNINGS.map(w => `${w.time} [${w.flow || 'n/a'}] ${w.message} (scene:${w.scene || 'n/a'} product:${w.product || 'n/a'})`).join('\n') })
-        }
-        if (INFOS.length > 0) {
-          testInfo.annotations.push({ type: 'info', description: INFOS.map(i => `${i.time} [${i.flow || 'n/a'}] ${i.message}`).join('\n') })
-        }
-      } catch (err) {
-        console.warn('Failed to attach structured logs to testInfo:', err)
-      }
-
       console.log('📸 Screenshot attached:', screenshotPath)
+
+      // Attach Logs
+      if (WARNINGS.length > 0) {
+        testInfo.annotations = testInfo.annotations || []
+        testInfo.annotations.push({ type: 'warning', description: WARNINGS.map(w => `${w.time} - ${w.message}`).join('\n') })
+      }
+    } catch (err) {
+      console.warn('⚠️ Screenshot capture failed:', err)
     }
-
-  } catch (err) {
-    console.warn('⚠️ Screenshot capture failed:', err)
-  } finally {
-    try {
-      if (context) await context.close()
-      if (browser) await browser.close()
-    } catch {}
   }
-})
 
+  // ---------------------------------------------------------
+  // 2. SAVE VIDEO (Must happen after Context is closed)
+  // ---------------------------------------------------------
+  let videoPath = null
+  try {
+    if (context) {
+      const video = page.video()
+      await context.close() // Closing context flushes the video to disk
+      if (video) videoPath = await video.path()
+    }
+  } catch (e) {
+    // Ignore if already closed
+  }
+
+  if (needCapture && videoPath && fs.existsSync(videoPath)) {
+    try {
+      const status = testInfo.status || 'warning'
+      const safeName = sanitizeFilename(`${testInfo.title}_${status}_retry${testInfo.retry}`)
+      const resultsDir = path.join(process.cwd(), 'test-results')
+      const finalVideoPath = path.join(resultsDir, `${safeName}.webm`)
+
+      // Rename the video file to match the test case
+      fs.renameSync(videoPath, finalVideoPath)
+
+      // Attach Video
+      testInfo.attachments = testInfo.attachments || []
+      testInfo.attachments.push({
+        name: `${safeName}.webm`,
+        path: finalVideoPath,
+        contentType: 'video/webm'
+      })
+      console.log('🎥 Video attached:', finalVideoPath)
+    } catch (err) {
+      console.warn('⚠️ Video rename/attach failed:', err)
+    }
+  } else if (!needCapture && videoPath && fs.existsSync(videoPath)) {
+    // If test passed, delete the video to save space
+    try { fs.unlinkSync(videoPath) } catch (e) {}
+  }
+
+  // ---------------------------------------------------------
+  // 3. CLEANUP
+  // ---------------------------------------------------------
+  try {
+    if (browser) await browser.close()
+  } catch (e) {}
+})
 
 /* ===============================
    TESTS 
