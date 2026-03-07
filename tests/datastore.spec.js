@@ -760,20 +760,60 @@ async function saveOutlineData(pageArg, sceneId, outlineResult) {
 
 async function getSceneIdFromRow(rowLocator) {
   try {
+    // Try to get ID from input element's id attribute
     const idAttrHandle = await rowLocator.locator('td input[type="image"]').first().elementHandle()
     if (idAttrHandle) {
       const idAttr = await idAttrHandle.getAttribute('id')
       if (idAttr) {
         const firstDash = idAttr.indexOf('-')
         if (firstDash === -1) return idAttr
-        return idAttr.slice(firstDash + 1)
+        const sceneId = idAttr.slice(firstDash + 1)
+        if (sceneId && sceneId.trim()) return sceneId.trim()
       }
     }
+
+    // Try to get from value attribute
+    const valueAttr = await rowLocator.locator('td input[type="image"]').first().getAttribute('value')
+    if (valueAttr) {
+      // Try JSON parse
+      try {
+        const parsed = JSON.parse(valueAttr.replace(/'/g, '"'))
+        if (parsed && parsed[0]) return String(parsed[0]).trim()
+      } catch {
+        // Try regex match
+        const m = valueAttr.match(/^\s*\['?([^',\]]+)/)
+        if (m && m[1]) return m[1].trim()
+      }
+    }
+
+    // Try to extract from row text
     const txt = await getInnerTextSafe(rowLocator)
-    const m = txt.match(/[A-Z0-9]{10,}/i)
-    if (m) return m[0]
-    return ''
-  } catch (e) { return '' }
+    if (txt) {
+      // Look for common scene ID patterns
+      const patterns = [
+        /[A-Z0-9]{12,}/i,           // Standard catalog IDs
+        /[A-Z]{2,3}\d_[A-Z0-9_]+/i, // 21AT style IDs like BJ3N3_PMS_...
+        /Legion\d{2}-[A-Z0-9]+/i,   // Legion style IDs
+        /\b[A-Z0-9]{10,}\b/i        // Generic long alphanumeric
+      ]
+      for (const pattern of patterns) {
+        const m = txt.match(pattern)
+        if (m && m[0]) return m[0].trim()
+      }
+    }
+
+    // Last resort: generate a unique identifier for logging
+    const rowNum = await rowLocator.evaluate(el => {
+      const row = el.closest('tr')
+      return row ? Array.from(row.parentElement.children).indexOf(row) : -1
+    }).catch(() => -1)
+    
+    addWarning(`Could not parse sceneId from row, using fallback identifier`)
+    return `unknown_scene_row_${rowNum}_${Date.now()}`
+  } catch (e) {
+    addWarning(`getSceneIdFromRow error: ${e?.message || e}`)
+    return `error_scene_${Date.now()}`
+  }
 }
 
 async function clickOutlineAndHandle(row, page, sceneId, sceneIndex = 0) {
@@ -1057,29 +1097,39 @@ async function processScene(row, page, sceneIndex = 0, opts = {}) {
   await showStep(page, `Processing scene: ${rowText}`)
   await highlight(page, row)
   const sceneId = await getSceneIdFromRow(row)
-  if (!sceneId) addWarning(`Could not parse sceneId for scene row: ${rowText}`)
+  
+  // Skip processing if scene ID is empty or malformed
+  if (!sceneId || sceneId.startsWith('unknown_scene') || sceneId.startsWith('error_scene')) {
+    addWarning(`Skipping scene processing - invalid or empty sceneId: "${sceneId}"`)
+    return { skipped: true, reason: 'Invalid scene ID' }
+  }
 
   setContext({ flow: 'sceneProcessing', scene: sceneId })
 
-  const outlineRes = await clickOutlineAndHandle(row, page, sceneId, sceneIndex)
-  await page.waitForTimeout(1000)
-
-  const previewRes = await clickPreviewAndHandle(row, page, sceneId, outlineRes.outlineResult, sceneIndex, opts)
-
-  await page.waitForTimeout(10000)
-
-  const detailsRes = await clickDetailsAndHandle(row, page, sceneId, previewRes.previewImageSrc, sceneIndex, opts)
-
-  // cleanup UI overlays if present
   try {
-    const previewBtn = Locators.scenePreviewButton(page, row)
-    const outlineBtn = Locators.sceneOutlineButton(page, row)
-    if (await previewBtn.count() > 0) { await clickRowButtonRobust(page, row, previewBtn); await page.waitForTimeout(900) }
-    if (await outlineBtn.count() > 0) { await clickRowButtonRobust(page, row, outlineBtn); await page.waitForTimeout(900) }
-  } catch (e) {}
+    const outlineRes = await clickOutlineAndHandle(row, page, sceneId, sceneIndex)
+    await page.waitForTimeout(1000)
+
+    const previewRes = await clickPreviewAndHandle(row, page, sceneId, outlineRes.outlineResult, sceneIndex, opts)
+
+    await page.waitForTimeout(10000)
+
+    const detailsRes = await clickDetailsAndHandle(row, page, sceneId, previewRes.previewImageSrc, sceneIndex, opts)
+
+    // cleanup UI overlays if present
+    try {
+      const previewBtn = Locators.scenePreviewButton(page, row)
+      const outlineBtn = Locators.sceneOutlineButton(page, row)
+      if (await previewBtn.count() > 0) { await clickRowButtonRobust(page, row, previewBtn); await page.waitForTimeout(900) }
+      if (await outlineBtn.count() > 0) { await clickRowButtonRobust(page, row, outlineBtn); await page.waitForTimeout(900) }
+    } catch (e) {}
+  } catch (e) {
+    addWarning(`Error processing scene ${sceneId}: ${e?.message || e}`)
+  }
 
   clearContext()
   await fastWait(page, 400)
+  return { skipped: false }
 }
 
 /* ===============================
