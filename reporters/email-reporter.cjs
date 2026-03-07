@@ -4,6 +4,9 @@ const fs = require('fs')
 const path = require('path')
 const nodemailer = require('nodemailer')
 
+// Gmail has a 25MB limit, but we'll use 20MB to be safe
+const MAX_EMAIL_SIZE_BYTES = 20 * 1024 * 1024
+
 function escapeHtml(s = '') { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
 function getTopFrameFromStack(stack = '') {
   try {
@@ -16,6 +19,14 @@ function getTopFrameFromStack(stack = '') {
   return null
 }
 
+function formatBytes(bytes) {
+  if (bytes === 0) return '0 Bytes'
+  const k = 1024
+  const sizes = ['Bytes', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+}
+
 function collectAttachments(result = {}) {
   const atts = []
   try {
@@ -23,15 +34,40 @@ function collectAttachments(result = {}) {
     for (const a of result.attachments) {
       if (!a || !a.path) continue
       const ext = path.extname(a.path).toLowerCase()
-      // Includes images AND videos
-      if (['.png', '.jpg', '.jpeg', '.webp', '.gif', '.webm', '.mp4'].includes(ext)) {
+      // Only include images, skip videos for email (too large)
+      if (['.png', '.jpg', '.jpeg', '.webp', '.gif'].includes(ext)) {
         try { 
-          if (fs.existsSync(a.path)) atts.push({ filename: path.basename(a.path), path: a.path }) 
+          if (fs.existsSync(a.path)) {
+            const stats = fs.statSync(a.path)
+            atts.push({ 
+              filename: path.basename(a.path), 
+              path: a.path,
+              size: stats.size
+            }) 
+          }
         } catch (e) {}
       }
     }
   } catch (e) {}
   return atts
+}
+
+function filterAttachmentsBySize(attachments, maxSizeBytes = MAX_EMAIL_SIZE_BYTES) {
+  const validAttachments = []
+  const skippedAttachments = []
+  let totalSize = 0
+
+  for (const att of attachments) {
+    const size = att.size || 0
+    if (totalSize + size <= maxSizeBytes) {
+      validAttachments.push(att)
+      totalSize += size
+    } else {
+      skippedAttachments.push(att)
+    }
+  }
+
+  return { validAttachments, skippedAttachments, totalSize }
 }
 
 class EmailReporter {
@@ -109,7 +145,6 @@ class EmailReporter {
       `
 
       try {
-        // ✅ Pass empty array [] for attachments
         await this._sendMail(process.env.DAILY_REPORT_EMAILS, subject, text, html, [])
         console.log(`📧 Daily summary sent to: ${process.env.DAILY_REPORT_EMAILS}`)
       } catch (err) {
@@ -118,19 +153,21 @@ class EmailReporter {
     }
 
     // ---------------------------------------------------------
-    // EMAIL 2: Failure Details (WITH ATTACHMENTS)
+    // EMAIL 2: Failure Details (WITH ATTACHMENTS - filtered by size)
     // ---------------------------------------------------------
     if (this.issues.length > 0 && process.env.FAILURE_ALERT_EMAILS) {
       const subject = `❌ Alert: ${this.stats.failed} Failures / ${this.stats.warnings} Warnings`
       
-      // Flatten unique attachments (images + videos)
-      const flattened = []
+      // Collect all attachments and filter by size
+      const allAttachments = []
       const seen = new Set()
       for (const it of this.issues) {
         for (const file of it.files || []) {
-          if (!seen.has(file.path)) { flattened.push(file); seen.add(file.path) }
+          if (!seen.has(file.path)) { allAttachments.push(file); seen.add(file.path) }
         }
       }
+
+      const { validAttachments, skippedAttachments, totalSize } = filterAttachmentsBySize(allAttachments)
 
       const htmlParts = []
       const textLines = []
@@ -143,21 +180,54 @@ class EmailReporter {
             <small>File: ${escapeHtml(it.file)}:${escapeHtml(it.line)} &nbsp; | &nbsp; Time: ${escapeHtml(it.time)}</small>
             <p style="margin:8px 0;padding:8px;background:#fafafa;border-radius:4px;white-space:pre-wrap;">${escapeHtml(it.message || '')}</p>
             ${ top ? `<div style="font-size:12px;color:#666">Top: ${escapeHtml(top.raw)}</div>` : '' }
-            ${ (it.files && it.files.length) ? `<div style="margin-top:8px;font-size:13px;"><strong>Attachments:</strong> ${it.files.map(a => escapeHtml(a.filename)).join(', ')}</div>` : ''}
           </div>
         `)
         textLines.push(`${it.type.toUpperCase()} — ${it.title}\nFile: ${it.file}:${it.line}\nMessage: ${it.message}`)
       }
 
+      // Add info about attachments
+      if (validAttachments.length > 0 || skippedAttachments.length > 0) {
+        htmlParts.push(`
+          <div style="margin-top:15px;padding:10px;background:#f5f5f5;border-radius:4px;font-size:12px;">
+            <strong>Attachments:</strong><br/>
+            ${validAttachments.map(a => `📷 ${escapeHtml(a.filename)} (${formatBytes(a.size)})`).join('<br/>')}
+            ${skippedAttachments.length > 0 ? `<br/><br/><em style="color:#888;">⚠️ ${skippedAttachments.length} attachment(s) skipped due to size limit (videos/large files). Check CI artifacts for full details.</em>` : ''}
+          </div>
+        `)
+      }
+
       try {
-        // ✅ Pass 'flattened' array for attachments
-        await this._sendMail(process.env.FAILURE_ALERT_EMAILS, subject, textLines.join('\n\n'), `<!doctype html><body>${htmlParts.join('')}</body>`, flattened)
+        // Only pass valid (size-filtered) attachments
+        await this._sendMail(
+          process.env.FAILURE_ALERT_EMAILS, 
+          subject, 
+          textLines.join('\n\n'), 
+          `<!doctype html><body>${htmlParts.join('')}</body>`, 
+          validAttachments
+        )
         console.log(`📧 Failure alert sent to: ${process.env.FAILURE_ALERT_EMAILS}`)
+        if (skippedAttachments.length > 0) {
+          console.log(`⚠️ ${skippedAttachments.length} attachment(s) skipped due to size limit`)
+        }
       } catch (err) {
         console.error('❌ Failed to send failure alert:', err)
+        // Fallback: try sending without any attachments
+        try {
+          console.log('📧 Retrying email without attachments...')
+          await this._sendMail(
+            process.env.FAILURE_ALERT_EMAILS, 
+            subject + ' (No Attachments)', 
+            textLines.join('\n\n'), 
+            `<!doctype html><body>${htmlParts.join('')}<p style="color:#888;font-size:12px;">Attachments were removed due to email size limits. Check CI artifacts for screenshots/videos.</p></body>`, 
+            []
+          )
+          console.log('📧 Failure alert sent without attachments')
+        } catch (retryErr) {
+          console.error('❌ Failed to send failure alert even without attachments:', retryErr)
+        }
       }
     } else if (!this.issues.length) {
-      console.log('✅ No failures/warnings — skipping Kapil email.')
+      console.log('✅ No failures/warnings — skipping failure alert email.')
     }
   }
 
@@ -175,7 +245,7 @@ class EmailReporter {
       subject,
       text,
       html,
-      attachments
+      attachments: attachments.map(a => ({ filename: a.filename, path: a.path }))
     }
     return transporter.sendMail(mailOptions)
   }
